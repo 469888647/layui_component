@@ -1,0 +1,642 @@
+@charset "utf-8";
+
+:root {
+  /* 主体颜色, 用于页面的主菜单的背景颜色 */
+  --lay-framework-menu-main-bgColor: 32, 34, 42;
+  /* 主体颜色, 用于页面的主菜单的背景颜色 - 副色 */
+  --lay-framework-menu-secondary-bgColor: 22, 24, 29;
+  /* 字体颜色, 用于页面的主菜单的字体颜色 */
+  --lay-framework-menu-main-fontColor: 255, 255, 255;
+  /* layui主题颜色, 用于页面的选项的颜色 */
+  --lay-framework-main-bgColor: 22, 183, 119;
+  /* --lay-framework-main-bgColor: 252, 1, 25; */
+  /* logo颜色, 如果没有特殊要求,和第一个主体颜色可以一致 */
+  --lay-framework-logo-bgColor: 32, 34, 42;
+  /* 头部颜色, 头部导航栏的背景颜色 */
+  --lay-framework-header-main-bgColor: 255, 255, 255;
+  /* 头部字体颜色, 头部导航栏的字体颜色 */
+  --lay-framework-header-main-fontColor: 51, 3, 0;
+  /* 头部字体次色, 头部导航栏的字体hover时颜色 */
+  --lay-framework-header-secondary-fontColor: 0, 0, 0;
+  /* 头部more字体颜色, 头部导航栏的 ^ v 图标颜色 */
+  --lay-framework-header-more-color: 102, 6, 0;
+
+  /* layui普通背景颜色, 用于一般页面的背景颜色 */
+  --lay-framework-main-body-bgColor: 255, 255, 255;
+  /* layui普通背景颜色, 用于一般页面的背景颜色 - 副色 选中or强调  */
+  --lay-framework-body-secondary-bgColor: 242, 242, 242;
+  /* 选项卡选中时的灰色 */
+  --lay-framework-body-grey-bgColor: 246, 246, 246;
+  /* layui普通边框颜色, 用于一般页面的边框颜色 */
+  --lay-framework-main-body-borderColor: 246, 246, 246;
+  /* layui普通字体颜色, 用于一般页面的字体颜色 */
+  --lay-framework-main-body-fontColor: 51, 51, 51;
+  /* layui普通字体颜色, 用于一般页面的字体颜色 - 副色 浅色 */
+  --lay-framework-body-secondary-fontColor: 102, 102, 102;
+  /* layui主题颜色 - 危险, 一般是红色 */
+  --lay-framework-main-dangerColor: 255, 87, 34;
+}
+
+/* 展开 or 收缩菜单动画 */
+#lay-framework .layui-side.layui-side-menu.layui-bg-black,
+#lay-framework .layui-logo.layui-hide-xs.layui-bg-black,
+#lay-framework .layui-nav.layui-layout-left,
+#lay-framework .layui-nav.layui-layout-right,
+#lay-framework .lay-framework-pagetabs{
+  transition: 0.5s all;
+}
+
+/* 左侧菜单最外层的背景色 layui.css里面权重已设置成最大 */
+/* 后修改主题颜色 - 主题色 --lay-framework-menu-main-bgColor */
+#lay-framework .layui-side.layui-side-menu.layui-bg-black,
+#lay-framework .lay-framework-pagetabs .lay-framework-tab-title li::after,
+#lay-framework .lay-framework-pagetabs .lay-framework-tab-title li.layui-this::after,
+/* 弹出层主题一律选择layui-layer-frame 这里修改标题的背景色;由于低版本layer的部分按钮使用的是图片,这里不修改文字的颜色 */
+.layui-layer-frame .layui-layer-title,
+#lay-framework.layadmin-side-shrink .layui-side-menu .layui-nav>.layui-nav-item>.layui-nav-child {
+  background-color: rgba(var(--lay-framework-menu-main-bgColor), .9) !important;
+}
+
+/* 左侧菜单子菜单的背景色 layui.css里面权重已设置成最大 */
+#lay-framework .layui-nav-itemed>.layui-nav-child {
+  background-color: rgba(var(--lay-framework-menu-secondary-bgColor), 1) !important;
+}
+
+/* 用户下拉菜单在修改主题色后颜色不兼容,这里进行修改 */
+#lay-framework .layui-nav.layui-layout-right .layui-nav-item .layui-nav-child.layui-anim{
+    background-color: rgba(var(--lay-framework-header-main-bgColor), 1);
+}
+#lay-framework .layui-nav.layui-layout-right .layui-nav-item .layui-nav-child.layui-anim a:hover{
+    background-color: rgba(var(--lay-framework-header-main-fontColor), .15)
+}
+#lay-framework .layui-nav.layui-layout-right .layui-nav-item .layui-nav-child dd.layui-this{
+    background-color: rgba(var(--lay-framework-header-main-fontColor), .15);
+    color: rgba(var(--lay-framework-header-main-fontColor), 1);
+}
+
+/* 修改主题颜色 - 选中色 --lay-framework-main-bgColor */
+#lay-framework .layui-nav-tree .layui-nav-child dd.layui-this,
+#lay-framework .layui-nav-tree .layui-nav-child dd.layui-this a,
+#lay-framework .layui-nav-tree .layui-this,
+#lay-framework .layui-nav-tree .layui-this>a
+
+/*,
+#lay-framework .layui-nav-tree .layui-this>a:hover*/
+  {
+  color: rgba(var(--lay-framework-menu-main-fontColor), .8) !important;
+  background-color: rgba(var(--lay-framework-main-bgColor), 1) !important;
+}
+
+/* 修改主题颜色 - logo --lay-framework-logo-bgColor 如果没有特殊指定,可以和主体颜色一致 --lay-framework-menu-main-bgColor */
+#lay-framework .layui-layout-admin .layui-logo {
+  background-color: rgba(var(--lay-framework-logo-bgColor), 1) !important;
+}
+
+#lay-framework .layui-layout-admin .layui-logo .layui-logo-span::after {
+    content: attr(version);
+    position: absolute;
+    top: 15px;
+    left: 0px;
+    right: 0px;
+}
+
+/**
+ * 修改主题颜色 - 头部色
+ * 头部背景色： 一般是白色 255,255,255   其它
+ * 头部字体色:  一般是 51,3,0           其它  248,248,248
+ * 头部字体次色:一般是 0,0,0            其它  255,255,255
+ * 头部more字体色: 一般是 102,6,0       其它  251,251,251
+ */
+#lay-framework .layui-layout-admin .layui-header {
+  background-color: rgba(var(--lay-framework-header-main-bgColor), 1);
+}
+
+#lay-framework .layui-layout-admin .layui-header a,
+#lay-framework .layui-layout-admin .layui-header a cite {
+  color: rgba(var(--lay-framework-header-main-fontColor), 1);
+}
+
+#lay-framework .layui-nav-itemed>a,
+#lay-framework .layui-nav-tree .layui-nav-title a,
+#lay-framework .layui-nav-tree .layui-nav-child a,
+#lay-framework .layui-nav-tree .layui-icon,
+#lay-framework .layui-nav-tree .layui-nav-item a {
+    color: rgba(var(--lay-framework-menu-main-fontColor), .8) !important;
+}
+
+#lay-framework .layui-layout-admin .layui-header a:hover {
+  color: rgba(var(--lay-framework-header-secondary-fontColor), 1);
+}
+
+#lay-framework .layui-layout-admin .layui-header .layui-nav .layui-nav-more {
+  border-top-color: rgba(var(--lay-framework-header-more-color), 1);
+  ;
+}
+
+#lay-framework .layui-layout-admin .layui-header .layui-nav .layui-nav-mored {
+  border-bottom-color: rgba(var(--lay-framework-header-more-color), 1);
+  ;
+  border-color: transparent;
+}
+
+#lay-framework .layui-nav-tree .layui-nav-child .layui-this>a:hover {
+  color: rgba(var(--lay-framework-menu-main-fontColor), 1) !important;
+  background-color: rgba(var(--lay-framework-menu-secondary-bgColor), 1);
+}
+
+#lay-framework .layui-nav-tree .layui-nav-child a:hover{
+    background-color: rgba(var(--lay-framework-menu-secondary-bgColor), 1);
+}
+
+/* 选项条最外层样式 */
+#lay-framework .lay-framework-pagetabs {
+  position: fixed;
+  left: 200px;
+  right: 0px;
+  top: 60px;
+  z-index: 991;
+  height: 40px;
+  background-color: rgba(var(--lay-framework-main-body-bgColor), 1);
+  color: rgba(var(--lay-framework-body-secondary-fontColor), 1);
+  border: 1px solid rgba(var(--lay-framework-main-body-borderColor), 1);
+  box-shadow: 0 2px 2px 0px rgba(var(--lay-framework-main-body-fontColor), .8);
+}
+
+/* 选项条第二层样式(组和操作按钮) */
+#lay-framework .layui-windows-group {
+  position: absolute;
+  text-align: left;
+  height: 40px;
+  line-height: 40px;
+  left: 0px;
+  right: 0px;
+}
+
+/* 选项条上面按钮的样式 */
+#lay-framework .layui-windows-group .lay-framework-tabs-control {
+  position: absolute;
+  height: 40px;
+  width: 40px;
+  text-align: center;
+  cursor: pointer;
+}
+
+#lay-framework .layui-windows-group .lay-framework-tabs-control:nth-child(1) {
+  left: 0;
+}
+
+#lay-framework .layui-windows-group .lay-framework-tabs-control:nth-child(2) {
+  right: 0px;
+}
+
+/* 选项条选择卡组样式 */
+#lay-framework .lay-framework-tab {
+  margin: 0;
+  position: absolute;
+  height: 40px;
+  left: 40px;
+  right: 80px;
+  overflow: hidden;
+}
+
+/* 选项条选择卡组样式 - 有序列表 */
+#lay-framework .layui-windows-group .lay-framework-tab .lay-framework-tab-title {
+  position: relative;
+  left: 0;
+  height: 40px;
+  white-space: nowrap;
+  border: none;
+  transition: all .2s;
+}
+
+/* 选项卡选项样式 */
+#lay-framework .layui-windows-group .lay-framework-tab .lay-framework-tab-title li {
+  min-width: 0;
+  line-height: 38px;
+  height: 38px;
+  max-width: 260px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 16px;
+  -webkit-transition: all .2s;
+  transition: all .2s;
+  position: relative;
+  padding: 0 15px;
+  text-align: center;
+  padding-right: 40px;
+  vertical-align: top;
+  cursor: pointer;
+  border-right: 1px solid rgba(var(--lay-framework-main-body-borderColor), 1);
+}
+
+#lay-framework .layui-windows-group .lay-framework-tab .lay-framework-tab-title li:nth-child(1) {
+  border-left: 1px solid rgba(var(--lay-framework-main-body-borderColor), 1);
+  padding-right: 15px;
+}
+
+/* 选项卡选项样式 - 选中 or 鼠标放入 */
+#lay-framework .layui-windows-group .lay-framework-tab .lay-framework-tab-title li:hover,
+#lay-framework .layui-windows-group .lay-framework-tab .lay-framework-tab-title li.layui-this {
+  color: rgba(var(--lay-framework-main-body-fontColor), 1);
+  background-color: rgba(var(--lay-framework-body-grey-bgColor), 1);
+}
+
+/* 选项卡选项上边框 */
+#lay-framework .layui-windows-group .lay-framework-tab .lay-framework-tab-title li::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  border-radius: 0;
+  box-sizing: border-box;
+  pointer-events: none;
+  background-color: rgba(var(--lay-framework-main-body-fontColor), 1);
+  transition: all .3s;
+  -webkit-transition: all .3s;
+}
+
+/* 选项卡选项上边框 - 选中 or 鼠标放入 */
+#lay-framework .layui-windows-group .lay-framework-tab .lay-framework-tab-title li.layui-this::after,
+#lay-framework .layui-windows-group .lay-framework-tab .lay-framework-tab-title li:hover::after {
+  width: 100%;
+  border: none;
+  height: 2px;
+  background-color: rgba(var(--lay-framework-main-body-fontColor), 1);
+}
+
+/* 选项卡选项右侧关闭按钮 */
+#lay-framework .lay-framework-tab-title li .layui-icon-close {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  margin: -7px 0 0 0;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  border-radius: 50%;
+  font-size: 12px;
+}
+
+/* 选项卡选项右侧关闭按钮 - 选中 or 鼠标放入 */
+#lay-framework .lay-framework-tab-title li .layui-icon-close:hover {
+  border-radius: 50%;
+  background-color: rgba(var(--lay-framework-main-dangerColor), 1);
+  color: rgba(var(--lay-framework-menu-main-fontColor), 1);
+}
+
+/* 左侧树形菜单滑块的换色 */
+#lay-framework .layui-nav-tree .layui-nav-bar,
+#lay-framework .layui-nav .layui-nav-bar {
+  background-color: rgba(var(--lay-framework-main-bgColor), 1);
+}
+
+#lay-framework .layui-layout-admin .layui-body {
+  top: 102px;
+  margin: 0;
+}
+
+#lay-framework .layadmin-tabsbody-item,
+#lay-framework .layadmin-tabsbody-item iframe {
+  width: 100%;
+  height: 100%;
+}
+
+#lay-framework .layadmin-tabsbody-item {
+  overflow: hidden;
+  display: none;
+}
+
+#lay-framework .layadmin-tabsbody-item.layui-this {
+  display: block;
+}
+
+#lay-framework .layui-layout-admin .layui-logo .layui-icon {
+  display: none;
+}
+
+/* 遮罩 */
+#lay-framework .layadmin-body-shade {
+  position: fixed;
+  display: none;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, .3);
+  z-index: 1000;
+}
+
+/* 表单 */
+.layui-form[wid100] .layui-form-label {
+  width: 100px;
+}
+
+.layui-form[wid100] .layui-input-block {
+  margin-left: 130px;
+}
+
+@media screen and (max-width: 450px) {
+  .layui-form[wid100] .layui-form-item .layui-input-inline {
+    margin-left: 132px;
+  }
+
+  .layui-form[wid100] .layui-form-item .layui-input-inline+.layui-form-mid {
+    margin-left: 130px;
+  }
+}
+
+.layui-form-item .layui-input-company {
+  width: auto;
+  padding-right: 10px;
+  line-height: 38px;
+}
+
+
+/* 侧边菜单 - 平板移动设备 */
+@media screen and (max-width: 768px) {
+  #lay-framework .layui-layout-admin .layui-side,
+  #lay-framework .layui-logo.layui-hide-xs.layui-bg-black {
+    transform: translate3d(-220px, 0, 0);
+    -webkit-transform: translate3d(-220px, 0, 0);
+    width: 220px;
+  }
+
+  #lay-framework.layadmin-side-spread-sm .layui-logo.layui-hide-xs.layui-bg-black {
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+    width: 220px;
+  }
+  #lay-framework .layui-layout-admin .layui-layout-left,
+  #lay-framework .lay-framework-pagetabs,
+  #lay-framework .layui-layout-admin .layui-body,
+  #lay-framework .layui-layout-admin .layui-footer {
+    left: 0;
+  }
+}
+
+/* @media screen and (max-width: 768px) {
+  #lay-framework.layadmin-side-spread-sm .layui-hide-xs {
+    display: block !important;
+  }
+} */
+
+/*
+  响应式补充
+*/
+@media screen and (max-width: 768px) {
+
+  /* 产品清单模板 */
+  .layadmin-panel-selection {
+    margin: 0;
+    width: auto;
+  }
+
+  /* 导航 */
+  .layui-body .layui-nav .layui-nav-item {
+    display: block;
+  }
+
+  /* 主体容器 */
+  .layui-layout-admin .layui-body .layadmin-tabsbody-item {
+    -webkit-overflow-scrolling: touch;
+    overflow: auto;
+  }
+
+  #lay-framework .layui-logo.layui-hide-xs.layui-bg-black{
+    display: block !important;
+  }
+}
+
+
+/* 移动端展开模式 */
+#lay-framework.layadmin-side-spread-sm .layui-layout-admin .layui-layout-left,
+#lay-framework.layadmin-side-spread-sm .lay-framework-pagetabs,
+#lay-framework.layadmin-side-spread-sm .layui-layout-admin .layui-body,
+#lay-framework.layadmin-side-spread-sm .layui-layout-admin .layui-footer {
+  left: 0;
+  transform: translate3d(220px, 0, 0);
+  -webkit-transform: translate3d(220px, 0, 0);
+}
+
+#lay-framework.layadmin-side-spread-sm .layui-layout-admin .layui-layout-right {
+  transform: translate3d(220px, 0, 0);
+  -webkit-transform: translate3d(220px, 0, 0);
+}
+
+#lay-framework.layadmin-side-spread-sm .layui-side {
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+}
+
+#lay-framework.layadmin-side-spread-sm .layadmin-body-shade {
+  display: block;
+}
+
+/* 侧边收缩模式 */
+#lay-framework.layadmin-side-shrink .layui-layout-admin .layui-logo {
+  width: 60px;
+}
+
+#lay-framework.layadmin-side-shrink .layui-layout-admin .layui-logo span {
+  display: none;
+}
+
+#lay-framework.layadmin-side-shrink .layui-layout-admin .layui-logo .layui-icon {
+  font-size: 24px;
+  font-weight: bold;
+  display: block;
+}
+
+#lay-framework.layadmin-side-shrink .layui-side {
+  left: 0;
+  width: 60px;
+}
+
+#lay-framework.layadmin-side-shrink .layui-layout-admin .layui-layout-left,
+#lay-framework.layadmin-side-shrink .lay-framework-pagetabs,
+#lay-framework.layadmin-side-shrink .layui-layout-admin .layui-body,
+#lay-framework.layadmin-side-shrink .layui-layout-admin .layui-footer {
+  left: 60px;
+}
+
+#lay-framework.layadmin-side-shrink .layui-side-menu .layui-nav {
+  position: static;
+  width: 60px;
+}
+
+#lay-framework.layadmin-side-shrink .layui-side-menu .layui-nav-item {
+  position: static;
+}
+
+#lay-framework.layadmin-side-shrink .layui-side-menu .layui-nav-item>a {
+  padding-right: 0;
+}
+
+#lay-framework.layadmin-side-shrink .layui-side-menu .layui-nav-item cite,
+#lay-framework.layadmin-side-shrink .layui-side-menu .layui-nav>.layui-nav-item>a .layui-nav-more,
+#lay-framework.layadmin-side-shrink .layui-side-menu .layui-nav>.layui-nav-item>.layui-nav-child {
+  display: none;
+  padding: 8px 0;
+  width: 200px;
+}
+
+#lay-framework.layadmin-side-shrink .layui-side-menu .layui-nav>.layui-nav-itemed>a {
+  background-color: rgba(var(--lay-framework-menu-main-bgColor), .9);
+}
+
+
+/* 主题弹出层设置 */
+.layui-framework-setTheme {
+  padding: 15px;
+  overflow-x: hidden;
+}
+
+.layui-framework-setTheme>h5 {
+  padding: 20px 0 10px;
+  color: #000;
+}
+
+.layui-framework-setTheme>h5:first-child {
+  padding-top: 0;
+}
+
+.layui-framework-setTheme-color {
+  width: 330px;
+  font-size: 0;
+}
+
+.layui-framework-setTheme-color li {
+  position: relative;
+  display: inline-block;
+  vertical-align: top;
+  width: 80px;
+  height: 50px;
+  margin: 0 15px 15px 0;
+  background-color: #f2f2f2;
+  cursor: pointer;
+  font-size: 12px;
+  color: #666;
+}
+
+.layui-framework-setTheme-color li:after {
+  content: '';
+  position: absolute;
+  z-index: 20;
+  top: 50%;
+  left: 50%;
+  width: 1px;
+  height: 0;
+  border: 1px solid #f2f2f2;
+  transition: all .3s;
+  -webkit-transition: all .3s;
+  opacity: 0;
+}
+
+.layui-framework-setTheme-color li.layui-this:after,
+.layui-framework-setTheme-color li:hover:after {
+  width: 100%;
+  height: 100%;
+  padding: 4px;
+  top: -5px;
+  left: -5px;
+  border-color: #5FB878;
+  opacity: 1;
+}
+
+.layui-framework-setTheme-header {
+  position: relative;
+  z-index: 10;
+  height: 10px;
+  border-top: 1px solid #f2f2f2;
+  border-right: 1px solid #f2f2f2;
+}
+
+.layui-framework-setTheme-side {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 20px;
+  height: 100%;
+  z-index: 11;
+  box-shadow: 1px 0 2px 0 rgba(0, 0, 0, .05);
+}
+
+.layui-framework-setTheme-logo {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 10px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, .15);
+}
+
+.layui-framework-setTheme-body {
+    position: absolute;
+    left: 20px;
+    right: 0px;
+    top: 10px;
+    bottom: 0px;
+}
+
+.layui-framework-setTheme-body div{
+    width: 28px;
+    height: 18px;
+    position: absolute;
+}
+
+.layui-framework-setTheme-body div:nth-child(1){
+    top: 1px;
+    left: 1px;
+}
+
+.layui-framework-setTheme-body div:nth-child(2){
+    top: 1px;
+    right: 1px;
+}
+
+.layui-framework-setTheme-body div:nth-child(3){
+    bottom: 1px;
+    left: 1px;
+}
+
+.layui-framework-setTheme-body div:nth-child(4){
+    bottom: 1px;
+    right: 1px;
+}
+
+
+/* layui 默认样式替换 */
+
+html, body{
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#lay-framework .layui-btn,
+.lay-framework-iframe .layui-btn{
+  background-color: rgba(var(--lay-framework-main-bgColor), .9);
+}
+
+.lay-framework-iframe{
+  background-color: rgba(var(--lay-framework-body-secondary-bgColor), 1);
+  height: 100%;
+}
+
+.lay-framework-iframe .layui-card{
+  position: relative;
+  left: 0;
+  right: 0;
+  margin: auto;
+  width: 680px;
+  height: 100%;
+}
+
+#lay-framework .layui-side{
+  z-index: 1001;
+}

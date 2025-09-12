@@ -1,0 +1,71 @@
+<!--
+    首页html骨架:
+ -->
+<!DOCTYPE html>
+<html>
+    <head>
+
+        <title>layui测试</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta name="referrer" content="strict-origin-when-cross-origin">
+        <!--  大致起完美适配的作用,试开发者不管像素比,只需按照css像素编写代码即可     -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+        <link href="../plugin/layui/css/layui.css" rel="stylesheet">
+    </head>
+    <body class="layui-layout-body">
+        <div class="layui-form layui-row layui-col-space16">
+            <div class="layui-col-md6">
+              <select lay-search="" lay-creatable="{'url':'http://192.168.0.133:8080/fd-channel-zone/test','type':'POST','dataType':'json','contentType':'application/json','idKey':'pid'}">
+                <option value="">请选择</option>
+                <option value="AAA">选项 A</option>
+                <option value="BBB">选项 B</option>
+                <option value="CCC">选项 C</option>
+              </select>
+            </div>
+            <div class="layui-col-md6">
+              <select lay-search="" lay-creatable="">
+                <option value="">请选择</option>
+                <option value="AAA">选项 A</option>
+                <option value="BBB">选项 B</option>
+                <option value="CCC" selected>选项 C</option>
+              </select>
+            </div>
+            <div class="layui-col-md6">
+              <select disabled>
+                <option value="">禁用选择框</option>
+                <option value="AAA">选项 A</option>
+                <option value="BBB">选项 B</option>
+                <option value="CCC">选项 C</option>
+              </select>
+            </div>
+            <div class="layui-col-md6">
+              <select>
+                <option value="">请选择</option>
+                <option value="AAA">选项 A</option>
+                <option value="BBB" disabled>选项 B（禁用选项）</option>
+                <option value="CCC">选项 C</option>
+              </select>
+            </div>
+            <div class="layui-col-md6">
+                <select lay-search="" lay-creatable="">
+                    <option value="">请选择</option>
+                    <optgroup label="分组 A">
+                      <option value="A-1">选项 A-1</option>
+                      <option value="A-2">选项 A-2</option>
+                      <option value="A-3">选项 A-3</option>
+                    </optgroup>
+                    <optgroup label="分组 B">
+                      <option value="B-1">选项 B-1</option>
+                      <option value="B-2">选项 B-2</option>
+                    </optgroup>
+                </select>
+            </div>
+
+          </div>
+        <script type="text/javascript" src="../plugin/layui/layui.js"></script>
+        <script type="text/javascript">
+            layui.form.render();
+
+        </script>
+    </body>
+</html>

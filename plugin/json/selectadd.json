@@ -1,0 +1,18 @@
+{
+  "resCode": 200,
+  "message": "请求成功",
+  "data": [
+    {
+      "pid": 5,
+      "aihaoName": "篮球"
+    },
+    {
+      "pid": 6,
+      "aihaoName": "唱歌"
+    },
+    {
+      "pid": 7,
+      "aihaoName": "跳舞"
+    }
+  ]
+}

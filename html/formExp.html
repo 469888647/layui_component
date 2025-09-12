@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>form使用示例</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta name="referrer" content="strict-origin-when-cross-origin">
+        <!--  大致起完美适配的作用,试开发者不管像素比,只需按照css像素编写代码即可     -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+        <!--    请勿在项目正式环境中引用该 layui.css 地址     -->
+       <!--  <link href="//cdn.staticfile.org/layui/2.8.17/css/layui.css" rel="stylesheet"> -->
+        <link href="../plugin/layui/css/layui.css" rel="stylesheet">
+        <!-- 当前使用特殊版本的layui,已将colortheme打包,这里不用单独引用 -- https://gitee.com/giteetcj/layui/tree/layuiframework/ -->
+        <!-- <link href="../plugin/layuiframework/css/colortheme.css" rel="stylesheet"> -->
+        <link href="../plugin/layuiframework/css/index.css" rel="stylesheet">
+        <style>
+            .layui-outline-side-fixed .layui-outline-ul li[level="4"]{
+                padding-left: 56px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="layui-fluid">
+            <!-- 大屏时占大半屏幕(右侧为outline留位置),小屏时占全部屏幕 -->
+            <div class="layui-col-xs12 layui-col-md10">
+                <div class = "ws-content">
+                    <div class = "layui-text ws-text">
+                        <h1 lay-ignore >表单补充</h1>
+                        <blockquote class="layui-elem-quote">
+                            <p>与表单扩展组件<code>formplus</code>不同,当前功能是直接在组件<code>form</code>上进行的修改。这意味着,为了保持一致性,每次同步仓库时都要解决它引起的冲突。</p>
+                        </blockquote>
+                        <h2>创建新选项</h2>
+                        <p>在2.9.7中,下拉选择框新增<code>lay-creatable</code>属性,用于在开启搜索时允许创建新选项;<a target="_blank" href="https://github.com/layui/layui/pull/1618">#1618</a></code></p>
+                        <ul>
+                            <li>新增,输入结构为<code>XXXX(YYYY)</code>型的内容会以<code>XXXX</code>作为选项显示文本;<code>YYYY</code>作为选项的value值;这个结构类似<code>layui.form.on('event(filter)', callback)</code>中的第一个参数。<span style="color: red;">添加这项内容主要是考虑到大多数下拉选择的选项其显示文本和value值不一定是相同的。</span></li>
+                            <li>新增,<code>lay-creatable</code>属性设置一个配置项。可以通过设置请求地址,在没有匹配到合适的选项时来异步请求选项。<span style="color: red;">添加这项内容主要为了扩展这个功能的适用范围。</span></li>
+                        </ul>
+                        <h3>基础示例</h3>
+                        <p>在这个例子中,可以输入<code>篮球(2.5)</code>来创建一个的文本值是篮球、value值是2.5的选项了</p>
+                        <!-- 创建新选项基础示例 -- start -->
+                        <div class = "layui-tab" lay-pre-code="创建新选项基础示例" lay-options="{title: 'HTML', encode: 'true'}" >
+                            <pre>
+    {{ layui_html_head }}
+    <div class="layui-card">
+        <div class="layui-card-header">创建新选项基础示例</div>
+        <div class="layui-card-body">
+            <div class="layui-form layui-form-pane" lay-filter="form-demo1">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">选择框</label>
+                    <div class="layui-input-inline">
+                        <select name="interest" lay-search="" lay-creatable = "" lay-hint lay-filter="aihao">
+                            <option value=""></option>
+                            <option value="0" selected="selected">写作</option>
+                            <option value="5">写作+阅读</option>
+                            <option value="1">阅读</option>
+                            <option value="2">游戏</option>
+                            <option value="3">音乐</option>
+                            <option value="4">旅行</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <button class="layui-btn" lay-submit="" lay-filter="form-bth-demo1">提交</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{ layui_js_area }}
+    <x3cscript type="text/javascript" >
+        layui.use(['form','formplus'], function(){
+            layui.form.render(null, 'form-demo1', true);
+            // 表单事件监听 - 提交事件 
+            layui.form.on('submit(form-bth-demo1)', function(obj){
+                var field = obj.field;
+                layui.layer.msg(JSON.stringify(field), {icon: 6});
+            });
+        });
+    </x3cscript>
+    {{ layui_html_tail }}
+                            </pre>
+                        </div>
+                        <!-- 创建新选项基础示例 -- end -->
+                        <h3>异步请求</h3>
+                        <p>上面的例子中<code>lay-creatable</code>是一个空字符串,除此之外还可以是一个类似于<code>lay-options</code>的配置项,它支持下面的配置项参数</p>
+                        <table class="layui-table">
+                            <colgroup>
+                                <col width="150">
+                                <col>
+                                <col width="100">
+                                <col width="100">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>属性名</th>
+                                    <th>描述</th>
+                                    <th>类型</th>
+                                    <th>默认值</th>
+                                </tr> 
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>url</td>
+                                    <td>必填,异步请求地址</td>
+                                    <td>string</td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>type</td>
+                                    <td>可选,ajax请求方式</td>
+                                    <td>string</td>
+                                    <td>GET</td>
+                                </tr>
+                                <tr>
+                                    <td>headers</td>
+                                    <td>可选,请求头</td>
+                                    <td>*</td>
+                                    <td>{}</td>
+                                </tr>
+                                <tr>
+                                    <td>contentType</td>
+                                    <td>可选</td>
+                                    <td>string</td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>dataType</td>
+                                    <td>可选,设置为json时请求参数会解析成字符串</td>
+                                    <td>string</td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>where</td>
+                                    <td>可选,额外的请求参数(请求参数会添加上value项,这个是当前下拉输入框的值)</td>
+                                    <td>*</td>
+                                    <td>{}</td>
+                                </tr>
+                                <tr>
+                                    <td>statusName</td>
+                                    <td>可选,响应结果中响应码对应的key</td>
+                                    <td>string</td>
+                                    <td>code</td>
+                                </tr>
+                                <tr>
+                                    <td>statusCode</td>
+                                    <td>可选,响应成功对应的响应码</td>
+                                    <td>*</td>
+                                    <td>200</td>
+                                </tr>
+                                <tr>
+                                    <td>dataName</td>
+                                    <td>可选,响应结果中数据(list)对应的key</td>
+                                    <td>string</td>
+                                    <td>data</td>
+                                </tr>
+                                <tr>
+                                    <td>idKey</td>
+                                    <td>可选,响应结果数据项中id对应的key,作为下拉选项中的value值</td>
+                                    <td>string</td>
+                                    <td>id</td>
+                                </tr>
+                                <tr>
+                                    <td>nameKey</td>
+                                    <td>可选,响应结果数据项中名称对应的key,作为下拉选项中的文本值</td>
+                                    <td>string</td>
+                                    <td>name</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <h3>异步请求示例</h3>
+                        <p>在这个例子中,输入了选项以外的值会去异步请求,这个例子请求的是一段json,实际使用时可以通过请求参数的不同返回相应的结果。</p>
+                        <p>在这个例子中,可以输入<code>唱</code><code>跳</code><code>篮球</code>异步请求选项,如果输入的内容(比如<code>画画</code>)实在没有获取到会提示无数据。</p>
+                        <!-- 异步请求示例 -- start -->
+                        <div class = "layui-tab" lay-pre-code="异步请求示例" lay-options="{title: 'HTML', encode: 'true'}" >
+                            <pre>
+    {{ layui_html_head }}
+    <div class="layui-card">
+        <div class="layui-card-header">异步请求示例</div>
+        <div class="layui-card-body">
+            <div class="layui-form layui-form-pane" lay-filter="form-demo1">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">选择框</label>
+                    <div class="layui-input-inline">
+                        <select name="interest" lay-search="" lay-creatable = "{'url':'../plugin/json/selectadd.json','idKey':'pid','nameKey':'aihaoName','statusName':'resCode'}" lay-filter="aihao">
+                            <option value=""></option>
+                            <option value="0" selected="selected">写作</option>
+                            <option value="1">阅读</option>
+                            <option value="2">游戏</option>
+                            <option value="3">音乐</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <button class="layui-btn" lay-submit="" lay-filter="form-bth-demo1">提交</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{ layui_js_area }}
+    <x3cscript type="text/javascript" >
+        layui.use('form', function(){
+            layui.form.render();
+            // 表单事件监听 - 提交事件 
+            layui.form.on('submit(form-bth-demo1)', function(obj){
+                var field = obj.field;
+                layui.layer.msg(JSON.stringify(field), {icon: 6});
+            });
+        });
+    </x3cscript>
+    {{ layui_html_tail }}
+                            </pre>
+                        </div>
+                        <!-- 异步请求示例 -- end -->
+                        <div style="width: 100%;height: 360px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+     <!--    请勿在项目正式环境中引用该 layui.js 地址     -->
+    <!-- <script type="text/javascript" src="//cdn.staticfile.org/layui/2.8.17/layui.js"></script> -->
+    <script type="text/javascript" src="../plugin/layui/layui.js"></script>
+    <script type="text/javascript" src="../config.js"></script>
+    <script type="text/javascript" src="../plugin/layuiframework/js/util.js"></script>
+    <!-- 当前使用特殊版本的layui,已将colortheme打包,这里不用单独引用 -- https://gitee.com/giteetcj/layui/tree/layuiframework/ -->
+    <!-- <script type="text/javascript" src="../plugin/layuiframework/js/colortheme.js"></script> -->
+    <script type="text/javascript" src="../plugin/lay/example.js"></script>
+    <script type="text/javascript">
+        layui.example.render();
+        layui.outline.render();
+        // layui.util.fixbar();
+        layui.colortheme.run();
+    </script>
+    </body>
+</html>
+
+

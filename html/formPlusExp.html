@@ -1,0 +1,1965 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>formPlus表单扩展</title>
+        <!-- 指定当前的MIME是text/html;字符集为UTF8 -->
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <!-- 指示 IE 使用其可用的最高版本模式（即最标准的模式）来渲染页面; 允许在 IE 上利用 Google Chrome Frame 插件调用Chrome 的渲染引擎。后面这个插件已经过时了。 -->
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,Chrome=1" />
+         <!-- 防止MIME类型伪造 -->
+        <meta http-equiv="X-Content-Type-Options" content="nosniff">
+        <!-- 仅在发生跨域访问时，发送只包含host的Referer信息，但在同域下还是完整的，而只有协议、域名和端口都一致时，浏览器才认为是同域 -->
+        <meta name="referrer" content="strict-origin-when-cross-origin">
+        <!--  大致起完美适配的作用,试开发者不管像素比,只需按照css像素编写代码即可     -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+        <!-- 跨站脚本攻击防护（XSS Protection）启用浏览器内置防护 -->
+        <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+        <!-- 当前使用的layui是新建分支, gitee地址 -- https://gitee.com/giteetcj/layui/tree/layuiframework/ -->
+        <link href="../plugin/layui/css/layui.css" rel="stylesheet">
+        <link href="../plugin/layuiframework/css/index.css" rel="stylesheet">
+        <style>
+            .layui-outline-side-fixed .layui-outline-ul li[level="4"]{
+                padding-left: 56px;
+            }
+
+            h2 {
+                padding-left: 15px;
+            }
+
+            h3 {
+                padding-left: 30px;
+            }
+
+            h4 {
+                padding-left: 45px;
+            }
+
+            blockquote ul,blockquote ol{
+                margin-left: 15px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="layui-fluid">
+            <!-- 大屏时占大半屏幕(右侧为outline留位置),小屏时占全部屏幕 -->
+            <div class="layui-col-xs12 layui-col-md10">
+                <div class = "ws-content">
+                    <div class = "layui-text ws-text">
+                        <h1 lay-ignore >表单扩展</h1>
+                        <blockquote class="layui-elem-quote">
+                            <p>
+                                表单扩展组件 <code>formplus</code> 是对原生表单组件 <code>form</code> 功能的补充和增强。
+                                它旨在解决一些原生组件未覆盖的问题，并提供了更多的灵活性和功能性。
+                                例如，使用 <code>form.val</code> 方法赋值时不能触发 <code>form.on</code> 添加的 <code>change</code> 监听事件的问题。 PR #1410
+                            </p>
+                        </blockquote>
+
+                        <h2>文件依赖</h2>
+                        <blockquote>
+                            <p>
+                                组件 <code>formplus</code> 除了需要引入 <code>formplus.js</code> 文件之外,
+                                还依赖以下资源文件，需确保在页面中正确引用。
+                            </p>
+                        </blockquote>
+
+                        <h3 lay-ignore>CSS 文件引用</h3>
+                        <blockquote>
+                            <p>
+                                在引用 <code>layui.css</code> 后，还需要额外引用 <code>formplus.css</code>。
+                                如果你当前使用的分支已集成 <code>formplus.css</code> (新创建的分支已经集成)，则无需额外引入。
+                            </p>
+                        </blockquote>
+
+                        <h3 lay-ignore>JS 文件引用</h3>
+                        <blockquote>
+                            <p>
+                                除了 <code>layui.js</code> 外，还需确保以下模块已正确加载。
+                                若当前版本已打包集成，则无需额外操作 <span style="color: red;">(除第三方插件外)</span>。
+                            </p>
+                            <ul>
+                                <li>模块 <code>jquery</code> </li>
+                                <li>模块 <code>lay</code> </li>
+                                <li>模块 <code>form</code> </li>
+                                <li>模块 <code>layer</code> </li>
+                                <li>模块 <code>laydate</code><span style="color: red;">（可能会使用）</span> </li>
+                                <li>模块 <code>tree</code><span style="color: red;">（可能会使用）</span> </li>
+                                <li><sup>新增</sup>模块 <code>treeorder</code> <span style="color: red;">（可能会使用）</span></li>
+                                <li><sup>第三方</sup>插件 <code>lunar.js</code> <span style="color: red;">（可能会使用,引入才生效）</span></li>
+                            </ul>
+                        </blockquote>
+
+                        <h2>基础介绍</h2>
+
+                        <h3 lay-options = '{"hot": true}'>核心功能</h3>
+                        <blockquote class="layui-elem-quote">
+                            <p> <code>formplus</code> 主要提供以下几个核心功能：</p>
+                        </blockquote>
+                        <ul>
+                            <li>
+                                <strong>监听表单元素变化：</strong>
+                                使用 <code><a href="#formplus-event">layui.formplus.on(filter, key, fn)</a></code> 方法为指定的表单元素绑定 <code>change</code> 事件。
+                                回调函数会接收到变化前和变化后的值。
+                            </li>
+                            <li>
+                                <strong>表单赋值与取值：</strong>
+                                使用 <code><a href="#formplus-val-1">layui.formplus.val(filter, object)</a></code> 方法对表单进行赋值或获取其当前值。
+                                在赋值完成后，也会自动触发相应的 <code>change</code> 监听事件。
+                            </li>
+                            <li>
+                                <strong>高级取值功能：</strong>
+                                不同类别的表单数据存储方式不同：
+                                输入框、单选框等以字符串形式保存；
+                                复选框等以数组形式保存。
+                                如有需要，可使用 <code><a href="#formplus-val-2">layui.formplus.getValue(filter, key)</a></code> 方法进行精确获取表单值。
+                            </li>
+                        </ul>
+
+                        <h3 lay-options = '{"hot": true}'>注意事项</h3>
+                        <blockquote class="layui-elem-quote">
+                            <p> <code>formplus</code> 是对表单组件<code>form</code>功能的扩展。因此与原生组件存在一定的兼容限制：</p>
+                        </blockquote>
+                        <ul>
+                            <li>
+                                <strong>避免冲突：</strong>
+                                <code><a href="#formplus-event">layui.formplus.on(filter, key, fn)</a></code> 方法已经基于 <code>layui.form.on</code> 实现。
+                                请勿在同一表单元素上再次使用 <code>layui.form.on</code>，以免产生事件绑定冲突。 
+                            </li>
+                            <li>
+                                <strong>忽略渲染：</strong>
+                                若确实需要在某表单元素上禁用 <code>formplus</code> 的处理，请为其添加属性 <code><a href="#formplus-attr-ignore-2">lay-formplus-ignore</a></code>。
+                            </li>
+                            <li>
+                                <strong>无需重复渲染：</strong>
+                                <code>formplus</code> 组件在首次调用 <code><a href="#formplus-render">layui.form.render(type, filter, deploy)</a></code> 方法进行渲染时，便会创建内部实例并建立相应的关联关系。
+                                当表单数据发生变化时，组件能够自动完成更新与调整，无需像原生 <code>form</code> 模块那样频繁手动调用渲染方法。
+                                <span style="color: red;">（目前下拉树组件存在特殊缺陷，暂未实现自动更新功能）</span>
+                            </li>
+                        </ul>
+
+                        <h2>属性与方法</h2>
+
+                            <h3 id = "formplus-render" lay-options = '{"hot": true}'>表单渲染</h3>
+                            <blockquote>
+                                <code>layui.form.render(type, filter, deploy);</code>
+                            </blockquote>
+                            <ul>
+                                <li>
+                                    <strong>参数 <code>type</code> </strong>：此参数为可选项，用于指定需要渲染的具体表单组件类型。支持的类型包括：<code>input</code>, <code>select</code>, <code>checkbox</code>, 和 <code>radio</code>。<span style="color: red;">注意：当设置为 <code>null</code> 时，表示渲染所有类型的表单组件。</span>
+                                </li>
+                                <li>
+                                    <strong>参数 <code>filter</code></strong>：此参数也是可选的，它对应于包含 <code>class="layui-form"</code> 的 HTML 元素上的 <code>lay-filter</code> 属性值。通过这个参数，你可以精确地控制哪些表单区域需要被渲染。如果没有指定 <code>filter</code> 参数，则默认会渲染整个页面中所有的符合条件的表单。
+                                </li>
+                                <li>
+                                    <strong>参数 <code>deploy</code></strong>：这是一个新增加的参数，默认值为 <code>false</code>。如果设置为 <code>true</code>，则会使用 <code>formplus</code> 模块来参与处理表单渲染；否则，默认情况下只会使用原始的 <code>form</code> 模块。<span style="color: red;">请注意：当你打算利用 <code>formplus</code> 提供的增强功能时，必须将此参数设置为 <code>true</code>。</span>
+                                </li>
+                            </ul>
+                            <blockquote class="layui-elem-quote">
+                                <p>此方法是对原生 <code>form</code> 模块中的 <code>render</code> 方法进行了扩展，在原有的基础上添加了一个新的参数 <code>deploy</code>，以便用户能够选择是否启用 <code>formplus</code> 模块来进行表单渲染。</p>
+                                <p>采用这种方式带来了以下优点：</p>
+                                <ul>
+                                    <li>
+                                        <strong>简化代码切换：</strong>
+                                        仅需在调用时调整一个参数即可实现从 <code>form</code> 到 <code>formplus</code> 渲染模式的转换，无需大幅度修改现有代码。
+                                    </li>
+                                    <li>
+                                        <strong>兼容性保障：</strong>
+                                        对于那些未传递 <code>deploy</code> 参数或将其设为 <code>false</code> 的情况，系统将自动回退至传统的 <code>form</code> 模块渲染机制，从而确保了与已有项目的无缝对接。
+                                    </li>
+                                </ul>
+                            </blockquote>
+                            <!-- 表单渲染示例 -- start -->
+                            <div class = "layui-tab" lay-pre-code="表单渲染示例" lay-options="{title: 'HTML', encode: 'true'}" >
+                                <pre>
+    {{ layui_html_head }}
+    <div class="layui-card">
+        <div class="layui-card-header">表单渲染示例</div>
+        <div class="layui-card-body">
+            <blockquote >
+                <p>本示例演示了 <code>formplus</code> 模块的以下核心功能：</p>
+                <ol>
+                    <li>通过 <code>layui.form.render(null, 'formplus-form-demo1', true)</code> 渲染表单；</li>
+                    <li>使用 <code>layui.formplus.on()</code> 方法为表单元素添加 change 监听事件；</li>
+                    <li>调用 <code>layui.formplus.val()</code> 进行赋值与取值，与原生 <code>layui.form.val()</code> 的区别在于：<br>
+                        &nbsp;&nbsp;① 赋值后会触发 change 事件；<br>
+                        &nbsp;&nbsp;② 支持数组型表单元素的赋值；
+                    </li>
+                    <li>使用 <code>layui.formplus.getValue()</code> 获取表单值，该方法返回的是可直接修改的原始数据对象，并支持数组型元素的取值。</li>
+                </ol>
+                <p>你可以通过以下操作进行测试：</p>
+                <ol>
+                    <li>点击“赋值”按钮：对表单进行赋值，并触发 change 事件；</li>
+                    <li>点击“form取值”按钮：使用原生 form 模块的方法获取表单值；</li>
+                    <li>点击“formplus取值”按钮：获取当前表单值包括数组类型字段。</li>
+                </ol>
+            </blockquote>
+
+            <!-- 表单结构 -->
+            <div class="layui-form layui-form-pane" lay-filter="formplus-form-demo1">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">选择框</label>
+                    <div class="layui-input-inline">
+                        <select name="interest" lay-search="" lay-hint>
+                            <option value=""></option>
+                            <option value="0">写作</option>
+                            <option value="1">阅读</option>
+                            <option value="2">游戏</option>
+                            <option value="3">音乐</option>
+                            <option value="4">旅行</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">开关</label>
+                    <div class="layui-input-block">
+                      <input type="checkbox" name="close" lay-skin="switch" lay-text="ON|OFF">
+                    </div>
+                </div>
+                <div class="layui-form-item" pane="">
+                    <label class="layui-form-label">单选框</label>
+                    <div class="layui-input-block">
+                        <input type="radio" name="sex1" value="男" title="男"  checked="checked">
+                        <input type="radio" name="sex1" value="女" title="女" >
+                        <input type="radio" name="sex1" value="禁" title="禁用" disabled="" >
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">复选框</label>
+                    <div class="layui-input-block">
+                      <input type="checkbox" name="like" value="write" title="写作" lay-filter="layui-form-vform-like1" />
+                      <input type="checkbox" name="like" value="read" title="阅读" lay-filter="layui-form-vform-like1" />
+                      <input type="checkbox" name="like" value="daze" title="发呆" lay-filter="layui-form-vform-like1" />
+                    </div>
+                </div>
+                <div class="layui-form-item layui-form-text">
+                    <label class="layui-form-label">文本域</label>
+                    <div class="layui-input-block">
+                        <!-- lay-lazy在文本框和文本域中出现时,这个表单元素的监听事件由input改为blur -->
+                        <textarea placeholder="请输入内容" lay-lazy name="remark" class="layui-textarea"></textarea>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-input-inline">
+                        <div class = "layui-water-ripples-container" lay-options = "{'type':'out','trigger': 'always', 'color': '#ff0000'}">
+                            <button class="layui-btn layui-btn-normal" id="formplus-bth-demo1-change">赋值</button>
+                        </div>
+                    </div>
+                    <div class="layui-input-inline">
+                        <div class = "layui-water-ripples-container">
+                            <button class="layui-btn layui-btn-normal" id="formplus-bth-demo1-val">formplus取值</button>
+                        </div>
+                    </div>
+                    <div class="layui-input-inline">
+                        <div class = "layui-water-ripples-container">
+                            <button class="layui-btn" lay-submit="" lay-filter="formplus-bth-demo1">form取值</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入 Layui JS -->
+    {{ layui_js_area }}
+
+    <!-- 示例脚本 -->
+    <x3cscript type="text/javascript" >
+        layui.use('formplus', function(){
+
+            var old = layui.form.val('formplus-bth-demo1').interest;
+
+            function changeSelect (value, oldValue){
+                if(value != old){
+                    layui.layer.msg('选择框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}', {icon: 6});
+                    console.log('选择框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}');
+                    old = value;
+                }
+            }
+
+            // 表单渲染（启用 formplus）
+            layui.formplus.render(null, 'formplus-form-demo1', true);
+
+            // 原生 submit 提交事件（不影响 formplus 功能）
+            // 表单事件监听 - 提交事件 (提交事件没有影响,只有 select,checkbox,switch,radio 这些change事件才不能混着用)
+            layui.form.on('submit(formplus-bth-demo1)', function(obj){
+                var field = obj.field;
+                layui.layer.msg(JSON.stringify(field), {icon: 6});
+            });
+
+            // 注册 change 事件监听器
+            // 可以不用在 HTML 上面设置lay-filter属性,防止重复或者设置不规范
+            layui.formplus.on('formplus-form-demo1','interest', function(value, oldValue){
+                debounce(changeSelect, {args: [value, oldValue]});
+            });
+            layui.formplus.on('formplus-form-demo1','close', function(value, oldValue){
+                layui.layer.msg('switch - 旧值:{' + oldValue + '}, 新值: {' + value + '}', {icon: 6});
+                console.log('switch - 旧值:{' + oldValue + '}, 新值: {' + value + '}');
+            });
+            layui.formplus.on('formplus-form-demo1','sex1', function(value, oldValue){
+                layui.layer.msg('单选框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}', {icon: 6});
+                console.log('单选框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}');
+            });
+            layui.formplus.on('formplus-form-demo1','remark', function(value, oldValue){
+                layui.layer.msg('文本域 - 旧值:{' + oldValue + '}, 新值: {' + value + '}', {icon: 6});
+                console.log('文本域 - 旧值:{' + oldValue + '}, 新值: {' + value + '}');
+            });
+            layui.formplus.on('formplus-form-demo1','like', function(value, oldValue){
+                layui.layer.msg('复选框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}', {icon: 6});
+                console.log('复选框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}');
+            });
+
+            // “赋值”按钮点击事件
+            $('#formplus-bth-demo1-change').on('click', function(){
+                // 使用formplus修改表单
+                layui.formplus.val('formplus-form-demo1', {
+                    'interest': '2',
+                    'close':true,
+                    'sex1':'男',
+                    'remark':'测试!!',
+                    'like': ['write','daze']
+                });
+            });
+
+            // “formplus取值”按钮点击事件
+            $('#formplus-bth-demo1-val').on('click', function(){
+                // 使用formplus修改表单
+                // 实验性,可以直接修改表单值
+                let field = layui.formplus.getValue('formplus-form-demo1');
+                layui.layer.msg(JSON.stringify(field), {icon: 6});
+            });
+        });
+    </x3cscript>
+    {{ layui_html_tail }}
+                                </pre>
+                            </div>
+                            <!-- 表单渲染示例 -- end -->
+
+                            <h3>新增属性</h3>
+
+                            <h4 id = "formplus-attr-ignore-1" lay-ignore >属性 - 忽略渲染(1)</h4>
+                            <blockquote><code>lay-ignore</code></blockquote>
+                            <blockquote>该属性用于忽略当前表单元素的渲染，其行为与原生 <code>layui.form</code> 中定义的一致。使用方式相同，具体用法请参考官方 <code><a href="https://layui.dev/docs/2/form/#attr">form</a></code> 模块文档。</blockquote>
+                            
+                            <h4 id = "formplus-attr-ignore-2" lay-ignore >属性 - 忽略渲染(2)</h4>
+                            <blockquote><sup>实验</sup> <code>lay-formplus-ignore</code> </blockquote>
+                            <blockquote>这是 <code>formplus</code> 新增的一个属性。如果你希望某个表单元素仅由原生 <code>form</code> 渲染，而不被 <code>formplus</code> 所管理或监听，则可以添加此属性。</blockquote>
+                            
+                            <h4 lay-ignore>属性 - 时间插件</h4>
+                            <blockquote><sup>实验</sup> <code>laydate</code> </blockquote>
+                            <blockquote>当为输入框添加该属性时，表示该输入框将作为时间选择器进行渲染，且支持 <code><a href="#formplus-input-laydate">时间选择插件</a></code> 的相关功能。</blockquote>
+                            
+                            <h4 id = "formplus-attr-hint" lay-ignore>属性 - 补全提示</h4>
+                            <blockquote><sup>实验</sup> <code>lay-hint</code> </blockquote>
+                            <blockquote>
+                                该属性通常配合 <code>lay-search</code> 使用，用于在下拉选择框中实现“输入补全”功能，即根据用户输入自动匹配并显示符合条件的选项。<br />
+                                更多细节请参见： <code><a href="#formplus-select-hint"> 下拉选择框补全提示 </a></code>。
+                            </blockquote>
+
+                            <h4 id = "formplus-attr-maxlength" lay-ignore>属性 - 输入限制</h4>
+                            <blockquote><sup>实验</sup> <code>maxlength</code> </blockquote>
+                            <blockquote>
+                                该属性用于限制输入框或文本域的最大输入字符数。虽然该属性本身是 HTML 原生支持的功能，但在 <code>formplus</code> 中额外增强了可视化反馈（例如实时显示已输入字数）。<br />
+                                详见： <code><a href="#formplus-input-limit">输入限制功能详解</a></code>。
+                            </blockquote>
+                            
+                            <h4 id = "formplus-attr-lazy" lay-ignore>属性 - 事件限制</h4>
+                            <blockquote><sup>实验</sup> <code>lay-lazy</code> </blockquote>
+                            <blockquote>默认情况下，输入框和文本域会监听 <code>input</code> 和 <code>propertychange</code> 事件以实现即时响应。添加此属性后，改为监听 <code>blur</code> 事件，延迟触发更新逻辑。</blockquote>
+                            
+                            <h4 id = "formplus-attr-options" lay-ignore>属性 - 配置项</h4>
+                            <blockquote><sup>实验</sup> <code>lay-options</code> </blockquote>
+                            <blockquote>
+                                <p>灵感来源于 <code>code</code> 模块，部分组件支持通过该属性传入 JSON 字符串形式的配置参数，从而减少 JavaScript 初始化代码的书写。</p>
+                                <p style="color: red;">注意：该属性值应为一个合法的 JSON 字符串。由于其中可能包含引号，请务必确保属性外层使用不同类型的引号包裹，避免语法错误。示例中的 HTML 已做区分，但通过<code>code</code>展示时又没有区分，复制粘贴时仍需特别注意。</p>
+                            </blockquote>
+
+                            <h3 id = "formplus-val-1" lay-options = '{"hot": true}'>取值与赋值(1)</h3>
+                            <blockquote><code>layui.formplus.val(filter, obj);</code></blockquote>
+                            <ul>
+                                <li><strong>参数 <code>filter</code></strong>：必填项，对应页面中带有 <code>class="layui-form"</code> 的表单容器上的 <code>lay-filter</code> 属性值。</li>
+                                <li><strong>参数 <code>obj</code></strong>：可选参数。若提供该对象，则执行赋值操作；若省略，则返回当前表单域的数据对象。</li>
+                            </ul>
+
+                            <h3 id = "formplus-val-2">取值与赋值(2) </h3>
+                            <blockquote><sup>实验</sup> <code>layui.formplus.getValue(filter, key);</code></blockquote>
+                            <ul>
+                                <li><strong>参数 <code>filter</code></strong>：必填项，对应页面中带有 <code>class="layui-form"</code> 的表单容器上的 <code>lay-filter</code> 属性值。</li>
+                                <li><strong>参数 <code>key</code></strong>：可选参数。不传则返回整个表单数据对象；若传入，则返回指定 <code>name</code> 属性对应的字段值。</li>
+                                <li><strong>返回值</strong>：返回值是 <code>formplus</code> 内部维护的对象，可以直接修改以实现数据同步。</li>
+                            </ul>
+
+                            <blockquote class="layui-elem-quote">
+                                <p style="color: red;"><strong>警告：</strong>这是一个<sup>实验</sup>性 API，请谨慎使用。不当的操作可能导致状态混乱或出现不可预期的行为。</p>
+                                <p> <code>layui.formplus.val</code> 取值与赋值(1) 与 <code>layui.formplus.getValue</code> 取值与赋值(2) 的相同点：两者均可用于获取或设置表单值。</p>
+                                <p> <code>layui.formplus.val</code> 取值与赋值(1) 与 <code>layui.formplus.getValue</code> 取值与赋值(2) 的不同点： </p>
+                                <ul>
+                                    <li> <code>layui.formplus.val()</code> 在未传入第二个参数时，调用的是原生 <code>layui.form.val()</code> 方法获取值。</li>
+                                    <li> <code>layui.formplus.getValue()</code> 返回的是 <code>formplus</code> 内部维护的数据对象，非直接从 DOM 获取。</li>
+                                    <li> <code>layui.formplus.val(obj)</code> 可以通过传入对象一次性完成赋值。(对于数组类型的数据是依次赋值的)</li>
+                                    <li> <code>layui.formplus.getValue()</code> 则可通过修改返回的对象来间接实现赋值效果。(对于数组类型的数据可以一次性替换)</li>
+                                </ul>
+                            </blockquote>
+                            <!-- 表单取值与赋值示例 -- start -->
+                            <div class = "layui-tab" lay-pre-code="表单取值与赋值示例" lay-options="{title: 'HTML', encode: 'true'}" >
+                                <pre>
+    {{ layui_html_head }}
+    <div class="layui-card">
+        <div class="layui-card-header">表单取值与赋值示例</div>
+        <div class="layui-card-body">
+            <blockquote class="layui-elem-quote">
+                <p>试验方法:</p>
+                <ol>
+                    <li>点击“赋值1按钮”可以对表单进行赋值，使用的是<code>val</code>方法</li>
+                    <li>点击“赋值2按钮”可以对表单进行赋值，使用的是<code>getValue</code>方法</li>
+                    <li>点击“取值1按钮”可以获取表单值，使用的是<code>val</code>方法</li>
+                    <li>点击“取值2按钮”可以获取表单值，使用的是<code>getValue</code>方法</li>
+                    <li>可以看出<code>getValue</code>获取出来的复选框内容是一个数组、开关获取的是一个布尔值,这一点说明两个方法是有区别的</li>
+                </ol>
+            </blockquote>
+
+            <!-- 表单容器 -->
+            <div class="layui-form layui-form-pane" lay-filter="formplus-form-demo2">
+                <!-- 下拉选择框（带补全提示） -->
+                <div class="layui-form-item">
+                    <label class="layui-form-label">选择框</label>
+                    <div class="layui-input-inline">
+                        <select name="interest" lay-search="" lay-hint>
+                            <option value=""></option>
+                            <option value="0" selected="selected">写作</option>
+                            <option value="1">阅读</option>
+                            <option value="2">游戏</option>
+                            <option value="3">音乐</option>
+                            <option value="4">旅行</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 开关 -->
+                <div class="layui-form-item">
+                    <label class="layui-form-label">开关</label>
+                    <div class="layui-input-block">
+                      <input type="checkbox" name="close" lay-skin="switch" lay-text="ON|OFF">
+                    </div>
+                </div>
+
+                <!-- 单选框 -->
+                <div class="layui-form-item" pane="">
+                    <label class="layui-form-label">单选框</label>
+                    <div class="layui-input-block">
+                        <input type="radio" name="sex1" value="男" title="男"  checked="checked">
+                        <input type="radio" name="sex1" value="女" title="女" >
+                        <input type="radio" name="sex1" value="禁" title="禁用" disabled="" >
+                    </div>
+                </div>
+
+                <!-- 复选框 -->
+                <div class="layui-form-item">
+                    <label class="layui-form-label">复选框</label>
+                    <div class="layui-input-block">
+                      <input type="checkbox" name="like" value="write" title="写作"  />
+                      <input type="checkbox" name="like" value="read" title="阅读"  />
+                      <input type="checkbox" name="like" value="daze" title="发呆"  />
+                    </div>
+                </div>
+
+                <!-- 文本域 -->
+                <div class="layui-form-item layui-form-text">
+                    <label class="layui-form-label">文本域</label>
+                    <div class="layui-input-block">
+                        <!-- lay-lazy在文本框和文本域中出现时,这个表单元素的监听事件由input改为blur -->
+                        <textarea placeholder="请输入内容" lay-lazy name="remark" class="layui-textarea"></textarea>
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="layui-form-item">
+                    <div class="layui-input-inline">
+                        <div class = "layui-water-ripples-container" >
+                            <button class="layui-btn layui-btn-normal" id="formplus-bth-demo2-change1">赋值1</button>
+                        </div>
+                    </div>
+                    <div class="layui-input-inline">
+                        <div class = "layui-water-ripples-container" >
+                            <button class="layui-btn layui-btn-normal" id="formplus-bth-demo2-change2">赋值2</button>
+                        </div>
+                    </div>
+                    <div class="layui-input-inline">
+                        <div class = "layui-water-ripples-container">
+                            <button class="layui-btn layui-btn-normal" id="formplus-bth-demo2-val1">取值1</button>
+                        </div>
+                    </div>
+                    <div class="layui-input-inline">
+                        <div class = "layui-water-ripples-container">
+                            <button class="layui-btn layui-btn-normal" id="formplus-bth-demo2-val2">取值2</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入 layui.js 脚本 -->
+    {{ layui_js_area }}
+
+    <!-- 示例脚本 -->
+    <x3cscript type="text/javascript" >
+        layui.use(['jquery', 'layer', 'formplus'], function(){
+
+            /**
+             * 初始化jQuery对象
+             */
+            var $ = layui.jquery;
+            if (!window.$) window.$ = layui.$;
+
+            // 初始化渲染表单
+            layui.form.render(null, 'formplus-form-demo2', true);
+            
+            //【赋值1】： - 使用 val 方法一次性赋值
+            $('#formplus-bth-demo2-change1').on('click', function(){
+                // 使用formplus修改表单
+                layui.formplus.val('formplus-form-demo2', {
+                    'interest': '2',
+                    'close':true,
+                    'sex1':'男',
+                    'remark':'测试!!',
+                    'like': ['write','daze']
+                });
+            });
+
+            // 【赋值2】：使用 getValue 获取内部对象并修改
+            $('#formplus-bth-demo2-change2').on('click', function(){
+                // 获取表单所有数据
+                let obj = layui.formplus.getValue('formplus-form-demo2');
+                // 分别赋值
+                obj.interest = '3';
+                obj.close = false;
+                obj.sex1 = '女';
+                obj.remark = '测试2!!';
+                // 数组型数据除了直接赋值,也可以使用数组的方法进行修改
+                obj.like.shift();
+            });
+
+            // 【取值1】：使用 val() 获取当前表单数据
+            $('#formplus-bth-demo2-val1').on('click', function(){
+                let field = layui.formplus.val('formplus-form-demo2');
+                layui.layer.msg(JSON.stringify(field), {icon: 6});
+            });
+
+            //【取值2】：使用 getValue() 获取内部状态对象
+            $('#formplus-bth-demo2-val2').on('click', function(){
+                let field = layui.formplus.getValue('formplus-form-demo2');
+                layui.layer.msg(JSON.stringify(field), {icon: 6});
+            });
+        });
+    </x3cscript>
+    {{ layui_html_tail }}
+                                </pre>
+                            </div>
+                            <!-- 表单取值与赋值示例 -- end -->
+
+                            <h3 id = "formplus-event" lay-options = '{"hot": true}'>事件</h3>
+                            <blockquote><code>layui.formplus.on(filter, key, fn);</code></blockquote>
+                            <ul>
+                                <li><strong>参数 <code>filter</code></strong>：必填项，对应页面中带有 <code>class="layui-form"</code> 的表单容器上的 <code>lay-filter</code> 属性值。</li>
+                                <li><strong>参数 <code>key</code></strong>：必填项，对应表单元素的 <code>name</code> 属性值，用于指定需要监听 change 事件的目标字段。</li>
+                                <li><strong>参数 <code>fn</code></strong>：必填项，事件触发时执行的回调函数。该函数仅接收两个参数：<code>value</code>（新值）、<code>oldValue</code>（旧值）。</li>
+                            </ul>
+                            <blockquote class="layui-elem-quote">
+                                <p style="color: red;"><strong>注意：</strong>被 <code>formplus</code> 管理的表单元素不能再使用 <code>layui.form.on</code> 添加事件监听器，必须使用 <code>layui.formplus.on()</code> 方法绑定 <code>change</code> 事件。</p>
+                                <p> <code>layui.formplus.on</code> 具有以下特点：</p>
+                                <ul>
+                                    <li>
+                                        <strong>事件类型：</strong>
+                                        支持统一接口监听所有类型的表单元素（无需区分 <code>select</code>、<code>radio</code>、<code>checkbox</code>）
+                                    </li>
+                                    <li>
+                                        <strong>输入监听：</strong>
+                                        支持输入框和文本域的监听，默认监听 <code>input</code> 和 <code>propertychange</code>；若添加了 <code>lay-lazy</code> 属性，则改为监听 <code>blur</code> 事件
+                                    </li>
+                                    <li>
+                                        <strong>推荐做法：</strong>
+                                        建议不要手动设置表单元素的 <code>lay-filter</code> 属性，系统会自动生成；推荐直接通过 <code>name</code> 属性作为标识符来绑定事件
+                                    </li>
+                                    <li>
+                                        <strong>回调参数：</strong>
+                                        回调函数 <code>fn(value, oldValue)</code> 只传递 change 前后的值，不传入事件对象或 DOM 元素
+                                    </li>
+                                    <li>
+                                        <strong>事件解绑：</strong>
+                                        只需让回调函数返回 <code>false</code> , 回调函数会在本次执行结束后自动解绑；你可以提供一个总是返回 <code>false</code> 的回调函数，达到类似 <code>on.once()</code> 的一次性监听效果
+                                    </li>
+                                </ul>
+                            </blockquote>
+                            <!-- 表单监听事件示例 -- start -->
+                            <div class = "layui-tab" lay-pre-code="表单监听事件示例" lay-options="{title: 'HTML', encode: 'true'}" >
+                                <pre>
+    {{ layui_html_head }}
+    <div class="layui-card">
+        <div class="layui-card-header">表单监听事件示例</div>
+        <div class="layui-card-body">
+            
+            <!-- 使用说明 -->
+            <blockquote class="layui-elem-quote">
+                <p>试验方法：点击切换表单元素即可触发监听事件（弹出框显示值）</p>
+            </blockquote>
+            
+            <!-- 表单容器 -->
+            <div class="layui-form layui-form-pane" lay-filter="formplus-form-demo3">
+                
+                <!-- 下拉选择框 -->
+                <div class="layui-form-item">
+                    <label class="layui-form-label">选择框</label>
+                    <div class="layui-input-inline">
+                        <select name="interest" lay-search="" lay-hint>
+                            <option value=""></option>
+                            <option value="0" selected="selected">写作</option>
+                            <option value="1">阅读</option>
+                            <option value="2">游戏</option>
+                            <option value="3">音乐</option>
+                            <option value="4">旅行</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- 开关 -->
+                <div class="layui-form-item">
+                    <label class="layui-form-label">开关</label>
+                    <div class="layui-input-block">
+                      <input type="checkbox" name="close" lay-skin="switch" lay-text="ON|OFF">
+                    </div>
+                </div>
+
+                <!-- 单选框 -->
+                <div class="layui-form-item" pane="">
+                    <label class="layui-form-label">单选框</label>
+                    <div class="layui-input-block">
+                        <input type="radio" name="sex1" value="男" title="男"  checked="checked">
+                        <input type="radio" name="sex1" value="女" title="女" >
+                        <input type="radio" name="sex1" value="禁" title="禁用" disabled="" >
+                    </div>
+                </div>
+
+                <!-- 复选框 -->
+                <div class="layui-form-item">
+                    <label class="layui-form-label">复选框</label>
+                    <div class="layui-input-block">
+                      <input type="checkbox" name="like" value="write" title="写作"  />
+                      <input type="checkbox" name="like" value="read" title="阅读"  />
+                      <input type="checkbox" name="like" value="daze" title="发呆"  />
+                    </div>
+                </div>
+
+                <!-- 文本域 -->
+                <div class="layui-form-item layui-form-text">
+                    <label class="layui-form-label">文本域</label>
+                    <div class="layui-input-block">
+                        <!-- lay-lazy在文本框和文本域中出现时,这个表单元素的监听事件由input改为blur -->
+                        <textarea placeholder="请输入内容" lay-lazy name="remark" class="layui-textarea"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Layui JS 引入区域 -->
+    {{ layui_js_area }}
+
+    <!-- 示例脚本 -->
+    <x3cscript type="text/javascript" >
+        layui.use(['jquery', 'layer', 'formplus'], function(){
+
+            /**
+             * 初始化jQuery对象
+             */
+            var $ = layui.jquery;
+            if (!window.$) window.$ = layui.$;
+
+            // 初始化渲染表单
+            layui.form.render(null, 'formplus-form-demo3', true);
+            
+            // 绑定事件 - 下拉选择框
+            layui.formplus.on('formplus-form-demo3','interest', function(value, oldValue){
+                layui.layer.msg('选择框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}', {icon: 6});
+                console.log('选择框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}');
+            });
+
+            // 绑定事件 - 开关
+            layui.formplus.on('formplus-form-demo3','close', function(value, oldValue){
+                layui.layer.msg('switch - 旧值:{' + oldValue + '}, 新值: {' + value + '}', {icon: 6});
+                console.log('switch - 旧值:{' + oldValue + '}, 新值: {' + value + '}');
+            });
+
+            // 绑定事件 - 单选框
+            layui.formplus.on('formplus-form-demo3','sex1', function(value, oldValue){
+                layui.layer.msg('单选框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}', {icon: 6});
+                console.log('单选框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}');
+            });
+
+            // 绑定事件 - 文本域
+            layui.formplus.on('formplus-form-demo3','remark', function(value, oldValue){
+                layui.layer.msg('文本域 - 旧值:{' + oldValue + '}, 新值: {' + value + '}', {icon: 6});
+                console.log('文本域 - 旧值:{' + oldValue + '}, 新值: {' + value + '}');
+            });
+
+            // 绑定事件 - 复选框
+            layui.formplus.on('formplus-form-demo3','like', function(value, oldValue){
+                layui.layer.msg('复选框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}', {icon: 6});
+                console.log('复选框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}');
+            });
+
+        });
+    </x3cscript>
+    {{ layui_html_tail }}
+                                </pre>
+                            </div>
+                            <!-- 表单监听事件示例 -- end -->
+
+                            <h3 id = "formplus-wave">水波纹</h3>
+                            <blockquote><sup>实验</sup> <code>layui.formplus.wave(destination, option);</code> </blockquote>
+                            <ul>
+                                <li><strong>参数 <code>destination</code></strong>：必填项，渲染的目的地。</li>
+                                <li><strong>参数 <code>option</code></strong>：选填项，配置选项。</li>
+                            </ul>
+
+                            <blockquote>
+                                使用 <code>formplus</code> 渲染的表单中，符合条件的按钮都会被自动调用这个方法进行水波纹渲染。
+                                因此该方法单独提出来，用于为表单以外的按钮添加水波纹效果。
+                            </blockquote>
+                            
+                            <br/>
+
+                            <blockquote>
+                                要应用水波纹的按钮 DOM 必须满足以下结构：外层包裹一个 class 为 <code>layui-water-ripples-container</code> 的 div（注意该 div 的 display 是 inline-block）。
+                                参数 <code>destination</code> 指的就是这个外层 div 对应的 jQuery 对象。
+                            </blockquote>
+                            <pre>
+&lt;div class = &quot;layui-water-ripples-container&quot;&gt;
+    &lt;button class=&quot;layui-btn&quot; &gt;按钮&lt;/button&gt;
+&lt;/div&gt;
+                            </pre>
+
+                            <blockquote class="layui-elem-quote">
+                                <p>参数 <code>option</code> 支持设置如下选项，并且可以通过属性 <code><a href="#formplus-attr-options">lay-options</a></code> 的方式在 DOM 上进行设置：</p>
+                            </blockquote>
+
+                            <table class="layui-table">
+                                <colgroup>
+                                    <col width="200">
+                                    <col>
+                                    <col width="100">
+                                    <col width="200">
+                                </colgroup>
+                                <thead>
+                                    <tr>
+                                        <th>Key</th>
+                                        <th>描述</th>
+                                        <th>默认值</th>
+                                        <th>名称</th>
+                                    </tr> 
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>type</code></td>
+                                        <td>类型：<code>'inset'</code> 表示内波纹；<code>'out'</code> 表示外波纹。</td>
+                                        <td><code>'inset'</code></td>
+                                        <td>波纹的类型</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>color</code></td>
+                                        <td>颜色，支持 16 进制码或 rgba 格式。</td>
+                                        <td><code>'#000000'</code></td>
+                                        <td>波纹的颜色</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>borderRadius</code></td>
+                                        <td>仅 <code>out</code> 类型生效，值可以是带 px 的数值或百分比。</td>
+                                        <td><code>'2px'</code></td>
+                                        <td>波纹的圆角</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>spreadWidth</code></td>
+                                        <td>仅 <code>out</code> 类型生效，需带上单位 px。</td>
+                                        <td><code>'6px'</code></td>
+                                        <td>波纹扩展的大小</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>center</code></td>
+                                        <td>仅 <code>inset</code> 类型生效。<code>true</code> 表示由按钮中心扩散；<code>false</code> 表示由点击位置扩散。</td>
+                                        <td><code>false</code></td>
+                                        <td>波纹扩展的中心</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>trigger</code></td>
+                                        <td>触发方式：<code>'click'</code> 点击触发；<code>'mouseenter'</code> 鼠标移入触发；<code>'always'</code> 始终显示。</td>
+                                        <td><code>'click'</code></td>
+                                        <td>波纹的触发方式</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <!-- 水波纹示例 -- start -->
+                            <div class = "layui-tab" lay-pre-code="水波纹示例" lay-options="{title: 'HTML', encode: 'true'}" >
+                                <pre>
+    {{ layui_html_head }}
+    <style>
+        .docs-list-area {
+            display: inline-block;
+            vertical-align: middle;
+            width: 125px;
+            height: 100px;
+            line-height: 25px;
+            padding: 20px 0;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #e2e2e2;
+            font-size: 14px;
+            text-align: center;
+            color: #777;
+            cursor: pointer;
+            transition: all .3s;
+            -webkit-transition: all .3s;
+        }
+
+        .docs-list-area .docs-icon-name{
+            margin-top: 5px;
+        }
+
+        .docs-list-area:hover {
+            border-color: rgba(22, 183, 119, 1);
+            color: rgba(22, 183, 119, 1);
+        }
+    </style>
+    <div class="layui-card">
+        <div class="layui-card-header">水波纹示例</div>
+        <div class="layui-card-body">
+            <blockquote class="layui-elem-quote">
+                <p>试验方法：依次点击下方的按钮可以看到水波纹的效果了</p>
+            </blockquote>
+
+            <blockquote>表单中的按钮会自动被渲染水波纹效果</blockquote>
+
+            <!-- 表单结构 -->
+            <div class="layui-form layui-form-pane" lay-filter="formplus-form-demo4">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">选择框</label>
+                    <div class="layui-input-inline">
+                        <select name="interest" lay-search="" lay-hint>
+                            <option value=""></option>
+                            <option value="0" selected="selected">写作</option>
+                            <option value="1">阅读</option>
+                            <option value="2">游戏</option>
+                            <option value="3">音乐</option>
+                            <option value="4">旅行</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <div class="layui-input-inline">
+                        <div class = "layui-water-ripples-container">
+                            <button class="layui-btn" lay-submit="" lay-filter="formplus-bth-demo4">提交</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="layui-border-blue" />
+
+            <!-- 卡片：表单外的按钮 -->
+            <div class="layui-card">
+                <div class="layui-card-header">表单外的按钮可以调用 <code>wave</code> 方法来指定渲染</div>
+                <div class="layui-card-body" >
+                    <div>
+                        <div class = "docs-list-area">
+                            <div id = "formplus-wave-bth1" class = "layui-water-ripples-container">
+                                <button class="layui-btn" >内波纹</button>
+                            </div>
+                            <div class="docs-icon-name">直接调用 <code>wave</code> 方法来指定渲染</div>
+                        </div>
+                        <div class = "docs-list-area">
+                            <div id = "formplus-wave-bth2" class = "layui-water-ripples-container">
+                                <button class="layui-btn" >外波纹</button>
+                            </div>
+                            <div class="docs-icon-name">可以通过 <code>option</code> 修改配置项</div>
+                        </div>
+                        <div class = "docs-list-area">
+                            <div id = "formplus-wave-bth3" class = "layui-water-ripples-container" lay-options = "{'type':'out','trigger': 'always', 'color': '#ff0000'}">
+                                <button class="layui-btn" >闪烁</button>
+                            </div>
+                            <div class="docs-icon-name">可以通过 <code>lay-options</code> 修改配置项</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Layui JS 引入区域 -->
+    {{ layui_js_area }}
+
+    <!-- 示例脚本 -->
+    <x3cscript type="text/javascript" >
+        layui.use('formplus', function(){
+
+            // 渲染表单
+            layui.form.render(null, 'formplus-form-demo4', true);
+
+            // 表单提交事件监听
+            layui.form.on('submit(formplus-bth-demo4)', function(obj){
+                var field = obj.field;
+                layui.layer.msg(JSON.stringify(field), {icon: 6});
+            });
+
+            // 手动为外部按钮添加水波纹效果
+            layui.formplus.wave($('#formplus-wave-bth1'));
+            layui.formplus.wave($('#formplus-wave-bth3'));
+
+            // 自定义配置参数
+            layui.formplus.wave($('#formplus-wave-bth2'),{type:'out'});
+        });
+    </x3cscript>
+    {{ layui_html_tail }}
+                                </pre>
+                            </div>
+                            <!-- 水波纹示例 -- end -->
+                            <h3 id = "formplus-input-holiday">节假日与调休设置</h3>
+                            <blockquote><sup>实验</sup> <code>layui.formplus.addHoliday(destination, holiday, order, work);</code></blockquote>
+                            <ul>
+                                <li><strong>参数 <code>destination</code></strong>：必填项，表示被设置的日期，格式为 <code>yyyyMMdd</code>。</li>
+                                <li><strong>参数 <code>holiday</code></strong>：必填项，表示所属节假日的日期，格式为 <code>yyyyMMdd</code>。</li>
+                                <li><strong>参数 <code>order</code></strong>：必填项，表示节假期的序号：
+                                    <ul>
+                                    <li><code>0</code> - 元旦</li>
+                                    <li><code>1</code> - 春节</li>
+                                    <li><code>2</code> - 清明节</li>
+                                    <li><code>3</code> - 劳动节</li>
+                                    <li><code>4</code> - 端午节</li>
+                                    <li><code>5</code> - 中秋节</li>
+                                    <li><code>6</code> - 国庆节</li>
+                                    </ul>
+                                </li>
+                                <li><strong>参数 <code>work</code></strong>：必填项，表示是否调休：
+                                    <ul>
+                                    <li><code>true</code> - 上班</li>
+                                    <li><code>false</code> - 休息</li>
+                                    </ul>
+                                </li>
+                            </ul>
+
+                            <blockquote class="layui-elem-quote">
+                                <p>请注意，这是一个<sup>实验</sup>性的方法，需要搭配其它 <code><a href="#formplus-input-laydate-lunar">特殊的用法</a></code>才能生效。</p>
+                            </blockquote>
+
+                            <h2>输入框/文本域</h2>
+                            <blockquote>
+                                普通的输入框使用字符串维护表单值，而复选类型的下拉树则使用数组来维护表单值。
+                            </blockquote>
+
+                            <h3 >输入框/文本域事件</h3>
+                            <blockquote>
+                                <p>在前面的方法 <code><a href="#formplus-event">事件</a></code> 中已经提到：</p>
+                                <ol>
+                                    <li> <code>layui.formplus.on</code> 可以直接为输入框添加监听事件。</li>
+                                    <li>监听事件以输入框的 <code>name</code> 属性作为标识。</li>
+                                    <li>默认绑定的是输入框的 <code>input</code> 和 <code>propertychange</code> 事件；但如果添加了 <code><a href="#formplus-attr-lazy">lay-lazy</a></code> 属性，则改为绑定 <code>blur</code> 事件。</li>
+                                </ol>
+                            </blockquote>
+
+                            <h3 id = "formplus-input-limit">输入框/文本域限制提示</h3>
+                            <blockquote>
+                                <p><sup>实验</sup> <code><a href="#formplus-attr-maxlength">maxlength</a></code> 属性可以限制输入框能输入的最大字数，但是在页面上没有提示还能输入多少字数。此功能新增了一个可视化提示效果，用于增强用户体验。</p>
+                            </blockquote>
+                            <!-- 输入框/文本域限制提示示例 -- start -->
+                            <div class = "layui-tab" lay-pre-code="输入框/文本域限制提示示例" lay-options="{title: 'HTML', encode: 'true'}" >
+                                <pre>
+    {{ layui_html_head }}
+    <div class="layui-card">
+        <div class="layui-card-header">输入框 / 文本域限制提示示例</div>
+        <div class="layui-card-body">
+            <blockquote class="layui-elem-quote">
+                <p>试验方法：向输入框和文本域中输入内容，查看字数提示效果</p>
+            </blockquote>
+
+            <!-- 表单容器 -->
+            <div class="layui-form layui-form-pane" lay-filter="formplus-form-demo5">
+
+                <!-- 长输入框 -->
+                <div class="layui-form-item">
+                    <label class="layui-form-label">长输入框</label>
+                    <div class="layui-input-block" >
+                        <input type="text" name="title" maxlength="50" autocomplete="off" placeholder="请输入" class="layui-input" />
+                    </div>
+                </div>
+
+                <!-- 普通输入框 -->
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">输入框</label>
+                        <div class="layui-input-inline" >
+                            <input type="text" name="input" maxlength="15" autocomplete="off" placeholder="请输入" class="layui-input" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 带点缀的输入框 -->
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">点缀</label>
+                        <div class="layui-input-inline" >
+                            <input type="text" name="affix" maxlength="15" lay-affix="number" value = "9" autocomplete="off" placeholder="请输入" class="layui-input" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 文本域 -->
+                <div class="layui-form-item layui-form-text">
+                    <label class="layui-form-label">文本域</label>
+                    <div class="layui-input-block" >
+                        <textarea placeholder="请输入内容" name="remark" maxlength="150" class="layui-textarea"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入 layui.js 脚本 -->
+    {{ layui_js_area }}
+
+    <!-- 示例脚本 -->
+    <x3cscript type="text/javascript" >
+        layui.use('formplus', function(){
+            // 渲染表单并启用限制提示功能
+            layui.form.render(null, 'formplus-form-demo5', true);
+        });
+    </x3cscript>
+    {{ layui_html_tail }}
+                                </pre>
+                            </div>
+                            <!-- 输入框/文本域限制提示示例 -- end -->
+                            <h3 id = "formplus-input-selectTree">下拉树</h3>
+                            <blockquote>
+                                <p><sup>实验</sup> <code>selectTree</code> 下拉树是一个结合了下拉选择框与 <code>tree</code> 组件的新功能。</p>
+                                <ol>
+                                    <li>
+                                        <strong><code>selectTree</code> 分为单选和复选两种模式</strong>：
+                                        <ul>
+                                            <li>在单选模式下，<code>formplus</code> 会以字符串维护数据；</li>
+                                        </ul>
+
+                                        <hr/>
+
+                                        <ul>
+                                            <li>在复选模式下，<code>formplus</code> 会以数组维护数据；</li>
+                                            <li>使用 <code><a href="#formplus-val-1">第一类取值方法</a></code> 可获取<code>,</code>（英文逗号）分隔的字符串；</li>
+                                            <li>使用 <code><a href="#formplus-val-2">第二类取值方法</a></code> 可获取字符串数组。</li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <strong>依赖组件：</strong>
+                                        <p> <code>selectTree</code> 需要额外引入 <code>tree</code> 和 <code>treeorder(内部新增)</code> 模块。</p>
+                                    </li>
+                                    <li>
+                                        <strong>配置项：</strong>
+                                        <p> <code>selectTree</code> 使用 <code><a href="#formplus-attr-options">lay-options</a></code> 属性指定配置项，除支持 <code>tree</code> 原生配置外，还包含以下特有配置项：</p>
+
+                                        <table class="layui-table">
+                                            <colgroup>
+                                                <col width="200">
+                                                <col>
+                                                <col width="100">
+                                                <col width="200">
+                                            </colgroup>
+                                            <thead>
+                                                <tr>
+                                                    <th>Key</th>
+                                                    <th>描述</th>
+                                                    <th>默认值</th>
+                                                    <th>名称</th>
+                                                </tr> 
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>id</td>
+                                                    <td>树的唯一标识，用于后续操作，若不设置则随机生成</td>
+                                                    <td>'-'</td>
+                                                    <td>树的id</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>data</td>
+                                                    <td>树的数据源，与 <code>url</code> 二选一，可先设为空数组 <code>[]</code></td>
+                                                    <td>'-'</td>
+                                                    <td>树的数据源</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>url</td>
+                                                    <td>异步获取树的数据的地址</td>
+                                                    <td>'-'</td>
+                                                    <td>异步请求地址</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>showCheckbox</td>
+                                                    <td>是否启用复选模式（注意与 <code>layui.tree</code> 中同名属性区分）</td>
+                                                    <td>false</td>
+                                                    <td>是否复选</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>checkbox</td>
+                                                    <td>复选模式下，是否在选择后关闭下拉框</td>
+                                                    <td>false</td>
+                                                    <td>选择后收起</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>                    
+                                    </li>
+
+                                    <li>
+                                        <strong>获取 Tree 实例：</strong>
+                                        <blockquote><sup>实验</sup> <code>layui.formplus.$tree[id]</code> </blockquote>
+                                        <ul>
+                                            <li> <code>id</code> 即为树实例的 ID（建议通过 <code>lay-options</code> 显式指定）；</li>
+                                            <li> <code>selectTree</code> 会自动创建一个 <code>tree</code> 实例，并将其保存到 <code>layui.formplus.$tree</code> 中。</li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <strong>Tree 点击事件：</strong>
+                                        <blockquote><sup>实验</sup> <code>layui.form.on('selectTree(filter)', fn)</code> 用于监听点击树节点的回调函数。</blockquote>
+                                        <ul>
+                                            <li>参数 <code>selectTree(filter)</code>：对应元素属性 <code>lay-filter</code> 的值，必填；</li>
+                                            <li>参数 <code>callback</code>：回调函数，返回对象参数；若返回 <code>false</code> 则阻止该节点被选中。</li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <strong>更新下拉树的方法：</strong>
+                                        <blockquote><sup>实验</sup> <code>layui.formplus.doFixValue(othis)</code> </blockquote>
+                                        <ul>
+                                            <li>参数 <code>othis</code> ：必填，指代下拉树的根节点 DOM 元素（class 为 <code>layui-form-select</code> 的容器）</li>
+                                        </ul>
+                                        <blockquote>
+                                            <p><strong>应用场景：</strong></p>
+                                            <ul>
+                                                <li><code>selectTree</code> 包含两个变量：<code>name</code> 对应表单值，<code>*name</code> 对应展示值，二者需保持同步；</li>
+                                                <li>常点击事件会触发同步，但在表单赋值时可能不同步；</li>
+                                                <li>调用 <code>layui.form.render()</code> 可强制同步，但会导致下拉树关闭；</li>
+                                                <li>在复选模式下不适合频繁渲染，推荐使用 <code>layui.formplus.doFixValue()</code> 同步值。</li>
+                                            </ul>
+                                        </blockquote>
+                                    </li>
+                                    <li>
+                                        <strong>DOM 结构要求：</strong>
+                                        <blockquote>只有满足如下结构， <code>formplus</code> 才能识别并渲染为 <code>selectTree</code>：</blockquote>
+                                        <pre>
+&lt;div class=&quot;layui-unselect layui-form-select&quot;&gt;
+    &lt;div class=&quot;layui-select-title&quot;  &gt;
+        &lt;input type=&quot;text&quot; autocomplete=&quot;false&quot; placeholder=&quot;placeholder&quot; name=&quot;name&quot; class=&quot;layui-input&quot; lay-options=&quot;{}&quot; lay-filter=&quot;filter&quot; /&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+                                        </pre>
+                                    </li>
+                                </ol>
+                            </blockquote>
+                            <!-- 下拉树-简单示例 -- start -->
+                            <div class = "layui-tab" lay-pre-code="下拉树-简单示例" lay-options="{title: 'HTML', encode: 'true'}" >
+                                <pre>
+    {{ layui_html_head }}
+    <div class="layui-card">
+        <div class="layui-card-header">下拉树-简单示例</div>
+        <div class="layui-card-body">
+            
+            <blockquote class="layui-elem-quote">
+                <p>试验方法：与普通下拉选择框类似，点击切换选择节点。最后使用下方按钮查看当前表单值。</p>
+            </blockquote>
+            
+            <!-- 表单容器 -->
+            <div class="layui-form layui-form-pane" lay-filter="formplus-form-demo6">
+                <!-- 异步获取信息的下拉树 -->
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">异步获取信息</label>
+                        <div class="layui-input-block">
+                            <div class="layui-unselect layui-form-select">
+                                <div class="layui-select-title"  >
+                                    <input type="text" class="layui-input" autocomplete="false" placeholder="请选择" name = "tree1" lay-options = "{'url':'../plugin/json/selecttree.json','customName': { 'title':'cityName' }}" lay-filter = "selectTree-demo01" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 渲染后设置树的数据源 -->
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">渲染后设置树</label>
+                        <div class="layui-input-block">
+                            <div class="layui-unselect layui-form-select">
+                                <div class="layui-select-title"  >
+                                    <input type="text" class="layui-input" autocomplete="false" placeholder="请选择" name = "tree2" lay-options = "{'id':'selectTree-demo02','checkbox':true,'data':[],'customName': { 'title':'cityName' },'showCheckbox': true }" lay-filter = "selectTree-demo02" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 提交按钮 -->
+                <div class="layui-form-item">
+                    <button class="layui-btn" lay-submit="" lay-filter="formplus-bth-demo6">提交</button>
+                </div>
+
+                <!-- 自定义取值按钮 -->
+                <div class="layui-form-item">
+                    <button class="layui-btn" id="formplus-bth-demo6">formplus提交</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入 Layui JS -->
+    {{ layui_js_area }}
+
+    <!-- 示例脚本 -->
+    <x3cscript type="text/javascript" >
+        layui.use(['jquery', 'layer', 'formplus'], function(){
+
+            /**
+             * 初始化jQuery对象
+             */
+            var $ = layui.jquery;
+            if (!window.$) window.$ = layui.$;
+
+            // 渲染表单并启用 selectTree 功能
+            layui.form.render(null, 'formplus-form-demo6', true);
+
+            // 监听表单提交事件
+            layui.form.on('submit(formplus-bth-demo6)', function(obj){
+                var field = obj.field;
+                layui.layer.msg(JSON.stringify(field), {icon: 6});
+            });
+
+            // 绑定 tree1 值变化监听
+            layui.formplus.on('formplus-form-demo6','tree1', function(value, oldValue){
+                layui.layer.msg('异步获取 - 旧值:{' + oldValue + '}, 新值: {' + value + '}', {icon: 6});
+                console.log('异步获取 - 旧值:{' + oldValue + '}, 新值: {' + value + '}');
+            });
+
+            // 绑定 tree2 值变化监听
+            layui.formplus.on('formplus-form-demo6','tree2', function(value, oldValue){
+                layui.layer.msg('渲染后设置 - 旧值:{' + oldValue + '}, 新值: {' + value + '}', {icon: 6});
+                console.log('渲染后设置 - 旧值:{' + oldValue + '}, 新值: {' + value + '}');
+            });
+
+            // 异步加载树数据，并赋值给 tree2
+            $.get('../plugin/json/selecttree.json', {}, function(res){
+                let data = res.data;
+                // 获取 tree2 实例
+                var treeInst = layui.formplus.$tree['selectTree-demo02'];
+                // 更新树数据
+                treeInst.reload({
+                    data: data
+                });
+                // 再次渲染表单以保持同步（注意参数中最后一个 true）
+                layui.form.render(null, 'formplus-form-demo6', true);
+            });
+
+            // 自定义按钮取值
+            $('#formplus-bth-demo6').on('click', function(){
+                let field = layui.formplus.getValue('formplus-form-demo6');
+                layui.layer.msg(JSON.stringify(field), {icon: 6});
+            });
+        });
+    </x3cscript>
+    {{ layui_html_tail }}
+                                </pre>
+                            </div>
+                            <!-- 下拉树-简单示例 -- end -->
+                            <!-- 下拉树-进阶示例 -- start -->
+                            <div class = "layui-tab" lay-pre-code="下拉树-进阶示例" lay-options="{title: 'HTML', encode: 'true'}" >
+                                <pre>
+    {{ layui_html_head }}
+    <div class="layui-card">
+        <div class="layui-card-header">下拉树-进阶示例</div>
+        <div class="layui-card-body">
+
+            <blockquote class="layui-elem-quote">
+                <p>试验方法：上面的下拉树只能选择没有子节点的内容；下面的下拉树点击父节点会自动选中或取消下面所有子节点</p>
+            </blockquote>
+
+            <!-- 表单容器 -->
+            <div class="layui-form layui-form-pane" lay-filter="formplus-form-demo7">
+                <!-- 简单事件 - 只能选择叶子节点 -->
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">简单事件</label>
+                        <div class="layui-input-block">
+                            <div class="layui-unselect layui-form-select">
+                                <div class="layui-select-title"  >
+                                    <input type="text" class="layui-input" autocomplete="false" placeholder="请选择" name = "tree3" lay-options = "{'url':'../plugin/json/selecttree.json','customName': { 'title':'cityName' },'showCheckbox': true,'checkbox':true}" lay-filter = "selectTree-demo03" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 进阶事件 - 点击父节点联动子节点 -->
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">进阶事件</label>
+                        <div class="layui-input-block">
+                            <div class="layui-unselect layui-form-select">
+                                <div class="layui-select-title"  >
+                                    <input type="text" class="layui-input" autocomplete="false" placeholder="请选择" name = "tree4" lay-options = "{'url':'../plugin/json/selecttree.json','customName': { 'title':'cityName' },'showCheckbox': true,'checkbox':true}" lay-filter = "selectTree-demo04" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 提交按钮 -->
+                <div class="layui-form-item">
+                    <button class="layui-btn" lay-submit="" lay-filter="formplus-bth-demo7">提交</button>
+                </div>
+
+                <!-- 自定义取值按钮 -->
+                <div class="layui-form-item">
+                    <button class="layui-btn" id="formplus-bth-demo7">formplus提交</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入 layui.js 脚本 -->
+    {{ layui_js_area }}
+
+    <!-- 示例脚本 -->
+    <x3cscript type="text/javascript" >
+        layui.use(['jquery', 'layer', 'formplus'], function(){
+
+            /**
+             * 初始化jQuery对象
+             */
+            var $ = layui.jquery;
+            if (!window.$) window.$ = layui.$;
+
+            // 渲染表单并启用 selectTree 功能
+            layui.form.render(null, 'formplus-form-demo7', true);
+
+            // 监听表单提交事件
+            layui.form.on('submit(formplus-bth-demo7)', function(obj){
+                var field = obj.field;
+                layui.layer.msg(JSON.stringify(field), {icon: 6});
+            });
+
+            // 绑定 tree3 值变化监听
+            layui.formplus.on('formplus-form-demo7','tree3', function(value, oldValue){
+                layui.layer.msg('简单事件 - 旧值:{' + oldValue + '}, 新值: {' + value + '}', {icon: 6});
+                console.log('简单事件 - 旧值:{' + oldValue + '}, 新值: {' + value + '}');
+            });
+
+            // 绑定 tree4 值变化监听
+            layui.formplus.on('formplus-form-demo7','tree4', function(value, oldValue){
+                layui.layer.msg('进阶事件 - 旧值:{' + oldValue + '}, 新值: {' + value + '}', {icon: 6});
+                console.log('进阶事件 - 旧值:{' + oldValue + '}, 新值: {' + value + '}');
+            });
+
+            // 自定义按钮取值
+            $('#formplus-bth-demo7').on('click', function(){
+                let field = layui.formplus.getValue('formplus-form-demo7');
+                layui.layer.msg(JSON.stringify(field), {icon: 6});
+            });
+
+            // 设置下拉树的点击事件
+            // 【简单事件】只允许选择叶子节点：通过函数的返回值控制该节点是选中true还是不选中false,
+            layui.form.on('selectTree(selectTree-demo03)', function(obj){
+                // 仅没有子节点的节点才被选中
+                var finalFlag = !obj.value.children || obj.value.children.length == 0;
+                return finalFlag;
+            });
+
+            // 【工具函数】查找所有叶子节点的 id
+            function findAllNodeId(childrens, ids = []){
+                layui.each(childrens, function(key, value){
+                    if(!value.children || value.children.length == 0){
+                        ids.push(value.id);
+                    } else {
+                        findAllNodeId(value.children, ids);
+                    }
+                });
+                return ids;
+            }
+
+            // 【工具函数】查找值在数组中的位置
+            function indexOf(a, v){
+                let index = -1;
+                layui.each(a, function(i, a1){
+                  if (a1 == v) {
+                    index = i;
+                  }
+                });
+                return index;
+            }
+
+            // 【进阶事件】点击父节点时自动选中/取消所有子节点
+            layui.form.on('selectTree(selectTree-demo04)', function(obj){
+                // 仅没有子节点的节点才被选中
+                var finalFlag = !obj.value.children || obj.value.children.length == 0;
+                if(finalFlag) return true;
+                // 获取所有子节点的叶子ID
+                var ids = findAllNodeId(obj.value.children);
+                // 当前选中值数组
+                var values = layui.formplus.getValue('formplus-form-demo7', 'tree4');
+                // 第一次判断,是否是全选,是就移除所有节点,否则添加所有节点
+                // flag true 非全选  false 全选
+                var flag = false;
+                layui.each(ids, function(key, value){
+                    if(indexOf(values, value) == -1) flag = true;
+                });
+                // 更新选中状态
+                // 有一个问题 values 在push和splice没有改变到值,这里先使用layui.formplus.getValue('formplus-form-demo7', 'tree4')替代
+                layui.each(ids, function(key, value){
+                    if(indexOf(layui.formplus.getValue('formplus-form-demo7', 'tree4'), value) == -1){
+                        // 不在取值范围内,如果不是全选就加入选上
+                        if(flag) layui.formplus.getValue('formplus-form-demo7', 'tree4').push(value);
+                    } else {
+                        // 在取值范围内,如果是全选就删除取消
+                        if(!flag) layui.formplus.getValue('formplus-form-demo7', 'tree4').splice(indexOf(layui.formplus.getValue('formplus-form-demo7', 'tree4'),value), 1);
+                    }
+                });
+                // 这个方法不行,这个方式只能刷新下拉框收起的下拉树(如果是收起了,也不用这个方法,会自动刷新的)
+                // layui.form.render(null, 'formplus-form-demo7', true);
+                // 这个下拉树是允许连续选择的,所以调用下面的方法吧
+                layui.formplus.doFixValue(obj.othis);
+                return finalFlag;
+            });
+
+        });
+    </x3cscript>
+    {{ layui_html_tail }}
+                                </pre>
+                            </div>
+                            <!-- 下拉树-进阶示例 -- end -->
+                            <h3 id = "formplus-input-laydate">日期渲染</h3>
+                            <blockquote>
+                                <p><sup>实验</sup> 将组件 <code>laydate</code> 放入表单渲染时一起渲染。其配置参数以 <code><a href="#formplus-attr-options">lay-options</a></code> 属性值进行设置。</p>
+                                <ul>
+                                    <li>
+                                        属性说明：<code>laydate</code> 使用 <code><a href="#formplus-attr-options">lay-options</a></code>属性值来指定配置项，除了支持 <code>laydate</code> 原生配置外，还支持其他可以JSON化的配置项：
+                                        <table class="layui-table">
+                                            <colgroup>
+                                                <col width="200">
+                                                <col>
+                                                <col width="100">
+                                                <col width="200">
+                                            </colgroup>
+                                            <thead>
+                                                <tr>
+                                                    <th>属性名</th>
+                                                    <th>描述</th>
+                                                    <th>类型</th>
+                                                    <th>默认值</th>
+                                                </tr> 
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>id</td>
+                                                    <td>设定实例唯一索引，用于其他方法操作该实例。若未设置，则从<code>elem</code>绑定元素的<code>id</code>属性获取。</td>
+                                                    <td>String</td>
+                                                    <td>-</td> 
+                                                </tr>
+                                                <tr>
+                                                    <td>type</td>
+                                                    <td>选择器面板类型，可选值有：year、month、date、time、datetime。</td>
+                                                    <td>String</td>
+                                                    <td>'date'</td> 
+                                                </tr>
+                                                <tr>
+                                                    <td>format</td>
+                                                    <td>自定义日期或时间格式。</td>
+                                                    <td>String</td>
+                                                    <td>'yyyy-MM-dd'</td> 
+                                                </tr>
+                                                <tr>
+                                                    <td>value</td>
+                                                    <td>初始值,<code>lay-options</code>仅支持字符串形式。</td>
+                                                    <td>String</td>
+                                                    <td>'-'</td> 
+                                                </tr>
+                                                <tr>
+                                                    <td>theme</td>
+                                                    <td>主题,<code>lay-options</code>仅支持字符串形式。</td>
+                                                    <td>String</td>
+                                                    <td>'-'</td> 
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </li>
+                                    <li>
+                                        <blockquote>
+                                            <p>
+                                                <code>laydate</code>仅支持简单的日期选择框渲染。对于复杂需求（如联动选择），如果<code>lay-options</code>无法满足，您可以采取以下措施之一：
+                                            </p>
+                                            <ol>
+                                                <li>
+                                                    放弃<code>formplus</code>的时间管理,不添加 <code>laydate</code> 属性,这样<code>formplus</code>会将它当作普通的输入框对待。
+                                                </li>
+                                                <li>
+                                                    在<code>formplus</code>渲染前，先手动使用 <code>laydate</code> 组件渲染时间选择框，然后再渲染整个表单。
+                                                </li>
+                                                <li>
+                                                    若仍无法达到预期效果，可以添加 <code>lay-formplus-ignore</code>属性以忽略此字段的渲染。
+                                                </li>
+                                            </ol>
+                                        </blockquote>
+                                    </li>
+                                </ul>
+                            </blockquote>
+                            <!-- 日期渲染示例 -- start -->
+                            <div class = "layui-tab" lay-pre-code="日期渲染示例" lay-options="{title: 'HTML', encode: 'true'}" >
+                                <pre>
+    {{ layui_html_head }}
+    <div class="layui-card">
+        <div class="layui-card-header">日期渲染示例</div>
+        <div class="layui-card-body">
+            <!-- 表单容器 -->
+            <div class="layui-form layui-form-pane" lay-filter="formplus-form-demo8">
+                <!-- 提前渲染 -->
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">提前渲染</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="date1" laydate id="formplus-form-demo8-date1" autocomplete="off" readonly="" class="layui-input" >
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 普通日期 -->
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">普通日期</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="date2" laydate autocomplete="off" readonly="" class="layui-input" >
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 参数设置 -->
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">参数设置</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="date3" laydate lay-options = '{"format":"yyyy-MM-dd HH:mm:ss","type":"datetime","value":"2024-01-01 00:00:00"}' autocomplete="off" readonly="" class="layui-input" >
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 时间设置 -->
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">时间设置</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="date4" laydate id="formplus-form-demo8-date4" autocomplete="off" readonly="" class="layui-input" >
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 提交按钮 -->
+                <div class="layui-form-item">
+                    <button class="layui-btn" lay-submit="" lay-filter="formplus-bth-demo8">提交</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入 Layui JS -->
+    {{ layui_js_area }}
+
+    <!-- 示例脚本 -->
+    <x3cscript type="text/javascript" >
+        layui.use(['jquery', 'layer','laydate','formplus'], function(){
+
+            /**
+             * 初始化jQuery对象
+             */
+            var $ = layui.jquery;
+            if (!window.$) window.$ = layui.$;
+
+            // 提前渲染 date1
+            layui.laydate.render({
+                elem: "#formplus-form-demo8-date1",
+            });
+
+            // 设置 date4 的默认值
+            $("#formplus-form-demo8-date4").val('2024-01-02');
+            
+            // 表单渲染
+            layui.form.render(null, 'formplus-form-demo8', true);
+            
+            // 表单提交监听
+            layui.form.on('submit(formplus-bth-demo8)', function(obj){
+                var field = obj.field;
+                layui.layer.msg(JSON.stringify(field), {icon: 6});
+            });
+
+            // 绑定字段 change 监听事件
+            layui.formplus.on('formplus-form-demo8','date1', function(value, oldValue){
+                layui.layer.msg('提前渲染的选择框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}', {icon: 6});
+                console.log('提前渲染的选择框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}');
+            });
+            layui.formplus.on('formplus-form-demo8','date2', function(value, oldValue){
+                layui.layer.msg('普通渲染的选择框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}', {icon: 6});
+                console.log('普通渲染的选择框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}');
+            });
+            layui.formplus.on('formplus-form-demo8','date3', function(value, oldValue){
+                layui.layer.msg('参数渲染的选择框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}', {icon: 6});
+                console.log('参数渲染的选择框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}');
+            });
+            layui.formplus.on('formplus-form-demo8','date4', function(value, oldValue){
+                layui.layer.msg('时间设置的选择框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}', {icon: 6});
+                console.log('时间设置的选择框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}');
+            });
+        });
+    </x3cscript>
+    {{ layui_html_tail }}
+                                </pre>
+                            </div>
+                            <!-- 日期渲染示例 -- end -->
+
+                            <h3 id = "formplus-input-laydate-lunar">扩展农历</h3>
+                            <blockquote>
+                                <p><sup>实验</sup>在<code><a href="#formplus-input-laydate">日期渲染</a></code>时,将<code>lay-options</code>的属性<code>theme</code>填成<code>lunar</code>即可启用农历扩展功能。</p>
+                                <ul>
+                                    <li>
+                                        经过测试,只有在 <code>format</code> 为 <code>yyyy-MM-dd</code> 默认值,并且 <code>type</code> 为 <code>date</code> 时可以达到一个比较好的显示效果。(建议直接使用默认值，不要手动设置)
+                                    </li>
+                                    <li>
+                                        使用该功能前，需要先引入插件：<code><a target="_blank" href="https://cdnjs.cloudflare.com/ajax/libs/lunar-javascript/1.6.12/lunar.min.js">lunar</a></code> ，否则无法生效。
+                                    </li>
+                                    <li>
+                                        插件<code>lunar</code>的节假日调休规则是其内部维护的。<code><a href="#formplus-input-holiday">layui.formplus.addHoliday</a></code> 提供了一种方式来自定义节假日，但需对 lunar 源码进行改造：
+                                        <ol>
+                                            <li>
+                                                打开<code>lunar.min.js</code>文件
+                                            </li>
+                                            <li>
+                                                文件搜索关键字<code>fix</code>
+                                            </li>
+                                            <li>
+                                                找到函数 <code>fix:function(){D0(arguments)}</code>
+                                            </li>
+                                            <li>
+                                                在该函数后添加以下代码： <code>,getKey:function(){return x;},setKey:function(arg){x=arg;}</code>
+                                            </li>
+                                            <li>
+                                                上述修改相当于将 lunar 内部变量 <code>x</code> 暴露出来，以便我们通过外部接口进行编辑。
+                                            </li>
+                                        </ol>
+                                    </li>
+                                </ul>
+                            </blockquote>
+                            <!-- 扩展农历示例 -- start -->
+                            <div class = "layui-tab" lay-pre-code="扩展农历示例" lay-options="{title: 'HTML', encode: 'true'}" >
+                                <pre>
+    {{ layui_html_head }}
+    <div class="layui-card">
+        <div class="layui-card-header">扩展农历示例</div>
+        <div class="layui-card-body">
+            <div class="layui-form layui-form-pane" lay-filter="formplus-form-demo9">
+
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">普通日期</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="date" id = "formplus-form-demo9-date" laydate autocomplete="off" readonly="" class="layui-input" lay-options = '{"theme":"lunar"}' />
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <button class="layui-btn" lay-submit="" lay-filter="formplus-bth-demo9">提交</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入 Layui JS -->
+    {{ layui_js_area }}
+
+    <!-- 示例脚本 -->
+    <x3cscript type="text/javascript" src="../plugin/lunar/lunar.min.js" ></x3cscript>
+    <x3cscript type="text/javascript" >
+        layui.use(['jquery', 'layer','laydate','formplus'], function(){
+
+            /**
+             * 初始化jQuery对象
+             */
+            var $ = layui.jquery;
+            if (!window.$) window.$ = layui.$;
+
+            // 提前渲染时间控件
+            $("#formplus-form-demo9-date").val('2025-08-02');
+            // 表单渲染
+            layui.form.render(null, 'formplus-form-demo9', true);
+            // 表单事件监听 - 提交事件
+            layui.form.on('submit(formplus-bth-demo9)', function(obj){
+                var field = obj.field;
+                layui.layer.msg(JSON.stringify(field), {icon: 6});
+            });
+            // 设置change监听事件
+            layui.formplus.on('formplus-form-demo9','date', function(value, oldValue){
+                layui.layer.msg('普通渲染的选择框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}', {icon: 6});
+                console.log('普通渲染的选择框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}');
+            });
+
+            // 设置节假日 2025
+            /** 0. 元旦  */
+            layui.formplus.addHoliday('20250101', '20250101', 0, false);
+
+            /** 1.春节 */
+            layui.formplus.addHoliday('20250126', '20250129', 1, true);
+            layui.formplus.addHoliday('20250128', '20250129', 1, false);
+            layui.formplus.addHoliday('20250129', '20250129', 1, false);
+            layui.formplus.addHoliday('20250130', '20250129', 1, false);
+            layui.formplus.addHoliday('20250131', '20250129', 1, false);
+            layui.formplus.addHoliday('20250201', '20250129', 1, false);
+            layui.formplus.addHoliday('20250202', '20250129', 1, false);
+            layui.formplus.addHoliday('20250203', '20250129', 1, false);
+            layui.formplus.addHoliday('20250204', '20250129', 1, false);
+            layui.formplus.addHoliday('20250208', '20250129', 1, true);
+
+            /** 2.清明节 */
+            layui.formplus.addHoliday('20250404', '20250404', 2, false);
+            layui.formplus.addHoliday('20250405', '20250404', 2, false);
+            layui.formplus.addHoliday('20250406', '20250404', 2, false);
+
+            /** 3.劳动节 */
+            layui.formplus.addHoliday('20250427', '20250501', 3, true);
+            layui.formplus.addHoliday('20250501', '20250501', 3, false);
+            layui.formplus.addHoliday('20250502', '20250501', 3, false);
+            layui.formplus.addHoliday('20250503', '20250501', 3, false);
+            layui.formplus.addHoliday('20250504', '20250501', 3, false);
+            layui.formplus.addHoliday('20250505', '20250501', 3, false);
+
+            /** 4.端午节 */
+            layui.formplus.addHoliday('20250531', '20250531', 4, false);
+            layui.formplus.addHoliday('20250601', '20250531', 4, false);
+            layui.formplus.addHoliday('20250602', '20250531', 4, false);
+
+            /** 5.中秋节 */
+            layui.formplus.addHoliday('20251006', '20251006', 5, false);
+
+            /** 6.国庆节 */
+            layui.formplus.addHoliday('20250928', '20251001', 6, true);
+            layui.formplus.addHoliday('20251001', '20251001', 6, false);
+            layui.formplus.addHoliday('20251002', '20251001', 6, false);
+            layui.formplus.addHoliday('20251003', '20251001', 6, false);
+            layui.formplus.addHoliday('20251004', '20251001', 6, false);
+            layui.formplus.addHoliday('20251005', '20251001', 6, false);
+            layui.formplus.addHoliday('20251007', '20251001', 6, false);
+            layui.formplus.addHoliday('20251008', '20251001', 6, false);
+            layui.formplus.addHoliday('20251011', '20251001', 6, true);
+
+            /** 9.鸡诞节 */
+            layui.formplus.addHoliday('20250802', '20250802', 9, false);    
+
+        });
+    </x3cscript>
+    {{ layui_html_tail }}
+                                </pre>
+                            </div>
+                            <!-- 扩展农历示例 -- end -->    
+                            <h2>下拉选择框</h2>
+                            <blockquote>下拉选择框是用字符串为表单值进行维护的,现在还没考虑多选的下拉选择</blockquote>
+                            <h3 id = "formplus-select-hint">下拉选择框补全</h3>
+                            <blockquote><sup>实验</sup>在下拉选择框设置了<code>lay-search</code>属性的前提下,再添加一个<code><a href="#formplus-attr-hint">lay-hint</a></code>属性</blockquote>
+                            <!-- 选项补全示例 -- start -->
+                            <div class = "layui-tab" lay-pre-code="选项补全示例" lay-options="{title: 'HTML', encode: 'true'}" >
+                                <pre>
+    {{ layui_html_head }}
+    <div class="layui-card">
+        <div class="layui-card-header">选项补全示例</div>
+        <div class="layui-card-body">
+            <blockquote>
+                <p>试验方法:</p>
+                <ol>
+                    <li>
+                        在下拉输入框中输入<code>读</code>，由于添加了属性<code>lay-search</code>，会自动筛选出两个符合条件的选项。
+                    </li>
+                    <li>
+                        <code>lay-hint</code>会自动锁定一个匹配的选项并高亮选中，此时按下回车键即可选中该选项（上下方向键也可切换当前选中项，这是<code>layui.form</code>自带的功能）。
+                    </li>
+                    <li>
+                        <code>lay-hint</code>会检查当前选定的选项值，如果输入框内容是其前缀，则会自动将后半部分补全显示在输入框中，作为提示。
+                    </li>
+                </ol>
+            </blockquote>
+
+            <div class="layui-form layui-form-pane" lay-filter="formplus-form-demo10">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">选择框</label>
+                    <div class="layui-input-inline">
+                        <select name="interest" lay-search="{caseSensitive:false, fuzzy: true}" lay-hint >
+                            <option value=""></option>
+                            <option value="0">写作</option>
+                            <option value="2">游戏</option>
+                            <option value="3">音乐</option>
+                            <option value="4">旅行</option>
+                            <option value="5">读书</option>
+                            <option value="6">读报纸</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <button class="layui-btn" lay-submit="" lay-filter="formplus-bth-demo10">提交</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入 Layui JS -->
+    {{ layui_js_area }}
+
+    <!-- 示例脚本 -->
+    <x3cscript type="text/javascript" >
+        layui.use(['formplus'], function(){
+            // 表单渲染
+            layui.form.render(null, 'formplus-form-demo10', true);
+            // 表单事件监听 - 提交事件
+            layui.form.on('submit(formplus-bth-demo10)', function(obj){
+                var field = obj.field;
+                layui.layer.msg(JSON.stringify(field), {icon: 6});
+            });
+            // 设置change监听事件
+            layui.formplus.on('formplus-form-demo10','interest', function(value, oldValue){
+                layui.layer.msg('选择框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}', {icon: 6});
+                console.log('选择框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}');
+            });
+        });
+    </x3cscript>
+    {{ layui_html_tail }}
+                                </pre>
+                            </div>
+                            <!-- 选项补全示例 -- end -->
+                            <h3 >下拉选择框赋值</h3>
+                            <blockquote><sup>实验</sup>在下拉选择框赋值时进行了一个判断,如果赋值的不是下拉选择框中的已有项,就回滚这次赋值操作,保留原有的选择值</blockquote>
+                            <!-- 下拉选择框赋值示例 -- start -->
+                            <div class = "layui-tab" lay-pre-code="下拉选择框赋值示例" lay-options="{title: 'HTML', encode: 'true'}" >
+                                <pre>
+    {{ layui_html_head }}
+    <div class="layui-card">
+        <div class="layui-card-header">下拉选择框赋值示例</div>
+        <div class="layui-card-body">
+            <blockquote >
+                <p>试验方法:</p>
+                <ol>
+                    <li>点击“赋值按钮”可以对表单进行赋值,因为赋值不在下拉框的选项范围内,所以赋值会失败</li>
+                    <li>点击“form取值”按钮可以获取表单值</li>
+                </ol>
+            </blockquote>
+            <div class="layui-form layui-form-pane" lay-filter="formplus-form-demo11">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">选择框</label>
+                    <div class="layui-input-inline">
+                        <select name="interest" lay-search="" lay-hint>
+                            <option value=""></option>
+                            <option value="0">写作</option>
+                            <option value="1">阅读</option>
+                            <option value="2">游戏</option>
+                            <option value="3">音乐</option>
+                            <option value="4">旅行</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-input-inline">
+                        <div class = "layui-water-ripples-container">
+                            <button class="layui-btn layui-btn-normal" id="formplus-bth-demo11-change">赋值</button>
+                        </div>
+                    </div>
+                    <div class="layui-input-inline">
+                        <div class = "layui-water-ripples-container">
+                            <button class="layui-btn layui-btn-normal" id="formplus-bth-demo11-val">form取值</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{ layui_js_area }}
+    <x3cscript type="text/javascript" >
+        layui.use('formplus', function(){
+
+            // 防抖测试
+            function debounce(isClear, fn = {}){
+                if(layui.type(isClear) != 'function'){
+                    if(fn._throttleID){
+                        clearTimeout(fn._throttleID);
+                    }
+                } else {
+                    debounce(true, isClear);
+                    var param = {
+                        context: fn.context || null,
+                        args: fn.args || [],
+                        time: fn.time || 300
+                    };
+                    isClear._throttleID = setTimeout(function () {
+                        isClear.apply(param.context, param.args);
+                    }, param.time);
+                }
+            }
+
+            // 缓存原来的值
+            var old = layui.form.val('formplus-bth-demo1').interest || '';
+
+            // 表单值切换事件
+            function changeSelect (value, oldValue){
+                if(value != old){
+                    layui.layer.msg('选择框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}', {icon: 6});
+                    console.log('选择框 - 旧值:{' + oldValue + '}, 新值: {' + value + '}');
+                    old = value;
+                }
+            }
+
+            // 表单渲染
+            layui.form.render(null, 'formplus-form-demo11', true);
+
+            // 表单事件监听 - 使用formplus添加表单监听事件
+            // 可以不用自己设置lay-filter属性,防止重复或者设置不规范
+            layui.formplus.on('formplus-form-demo11','interest', function(value, oldValue){
+                debounce(changeSelect, {args: [value, oldValue]});
+            });
+            
+            // 表单事件监听 - 普通点击事件
+            $('#formplus-bth-demo11-change').on('click', function(){
+                // 使用formplus修改表单
+                layui.formplus.val('formplus-form-demo11', {'interest': '5'});
+            });
+
+            // 表单事件监听 - formplus取值
+            $('#formplus-bth-demo11-val').on('click', function(){
+                // 使用formplus修改表单
+                // 实验性,可以直接修改表单值
+                let field = layui.formplus.val('formplus-form-demo11');
+                layui.layer.msg(JSON.stringify(field), {icon: 6});
+            });
+        });
+    </x3cscript>
+    {{ layui_html_tail }}
+                                </pre>
+                            </div>
+                            <!-- 下拉选择框赋值示例 -- end -->
+
+
+                        <div style="width: 100%;height: 360px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <!-- 当前使用的layui是新建分支, gitee地址 -- https://gitee.com/giteetcj/layui/tree/layuiframework/ -->
+    <script type="text/javascript" src="../plugin/layui/layui.js"></script>
+    <script type="text/javascript" src="../config.js"></script>
+    <script type="text/javascript" src="../plugin/layuiframework/js/util.js"></script>
+    <script type="text/javascript" src="../plugin/lay/example.js"></script>
+    <script type="text/javascript" src="../plugin/layuiframework/js/outline.js"></script>
+    <script type="text/javascript">
+        layui.example.render();
+        layui.outline.render();
+        layui.colortheme.run();
+    </script>
+    </body>
+</html>
+
+

@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>tile使用示例</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta name="referrer" content="strict-origin-when-cross-origin">
+        <!--  大致起完美适配的作用,试开发者不管像素比,只需按照css像素编写代码即可     -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+        <!--    请勿在项目正式环境中引用该 layui.css 地址     -->
+       <!--  <link href="//cdn.staticfile.org/layui/2.8.17/css/layui.css" rel="stylesheet"> -->
+        <link href="../plugin/layui/css/layui.css" rel="stylesheet">
+        <!-- 当前使用特殊版本的layui,已将colortheme打包,这里不用单独引用 -- https://gitee.com/giteetcj/layui/tree/layuiframework/ -->
+        <!-- <link href="../plugin/layuiframework/css/colortheme.css" rel="stylesheet"> -->
+        <link href="../plugin/layuiframework/css/index.css" rel="stylesheet">
+        <style>
+            .layui-outline-side-fixed .layui-outline-ul li[level="4"]{
+                padding-left: 56px;
+            }
+
+            h2 {
+                padding-left: 15px;
+            }
+
+            h3 {
+                padding-left: 30px;
+            }
+
+            h4 {
+                padding-left: 45px;
+            }
+
+            blockquote ul,blockquote ol{
+                margin-left: 15px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="layui-fluid">
+            <!-- 大屏时占大半屏幕(右侧为outline留位置),小屏时占全部屏幕 -->
+            <div class="layui-col-xs12 layui-col-md10">
+                <div class = "ws-content">
+                    <div class = "layui-text ws-text">
+                        <h1 lay-ignore >快捷菜单</h1>
+                        <blockquote class="layui-elem-quote">
+                            <p>快捷菜单组件<code>tile</code>是对WIN10-UI功能的扩展:在<a target="_blank" href="https://win10ui.yuri2.cn/src/doc">开发文档</a>的未来计划中,作者想要实现可拖拽磁贴的功能。</p>
+                        </blockquote>
+                        <h2>文件依赖</h2>
+                        <blockquote>
+                            <p>以下的功能是对模块<code>tile</code>的描述,它除了需要<code>tile.js</code>文件之外,还需要引用下面的内容。</p>
+                        </blockquote>
+                        <h3 lay-ignore>css文件引用</h3>
+                        <blockquote>
+                            <ul>
+                                <li><p>在引用了<code>layui.css</code>后,还需要引用<code>tile.css</code>。当然,如果是当前分支进行打包<code>tile.css</code>就打包进了<code>layui.css</code>中,不用额外引用了</p></li>
+                                <li><p>在引用了<code>layui.css</code>后,还需要引用<sup>第三方</sup>的<code>animate.css</code>。当然,如果是当前分支进行打包<code>animate.css</code>就打包进了<code>layui.css</code>中,不用额外引用了</p></li>
+                            </ul>
+                            
+                        </blockquote>
+                        <h3 lay-ignore>js文件引用</h3>
+                        <blockquote>
+                            <p>在引用了<code>layui.js</code>后,还需要注意下面模块的加入。当然,如果是当前分支进行打包就包括下面的模块了<span style="color: red;">(除开第三方插件)</span>。</p>
+                            <ul>
+                                <li>模块<code>jquery</code></li>
+                                <li>模块<code>layer</code></li>
+                                <li>模块<code>dropdown</code><span style="color: red;">可能会使用</span></li>
+                            </ul>
+                        </blockquote>
+                        <h2>基础介绍</h2>
+                        <blockquote class="layui-elem-quote">
+                            <p>为了方便维护, <code>tile</code>功能从<a target="_blank" href="https://gitee.com/giteetcj/tile">原仓库COPY到这里来。</a></p>
+                            <p><span style="color: red;">并进行了下面几点的修改:</span></p>
+                            <ol>
+                                <li>修改成多个 <code><a href="#tile-base">快捷菜单实例</a></code>的并存的模式</li>
+                                <li>实现了磁贴比例和快捷菜单列数的自定义,打破之前定死的100像素单位和固定3列</li>
+                                <li>将磁贴 <code><a href="#tile-event-click">点击事件</a></code> 通过layui事件托管,不必出现在配置项中,主要针对的是配置项的缓存问题,function无法缓存</li>
+                                <li>修改颜色样式,应当随着layui主题变化,主要是结合新增模块<code>colortheme</code>来实现</li>
+                                <li>磁贴配置项中新增<code>content</code>,方便调用者进行自定义展示信息(如嵌入流媒体内容)</li>
+                                <li>磁贴配置项添加<code>kv</code>属性,用于补充信息;<code>id</code>可以不用传了,防止传入重复的<code>id</code>导致系统出问题</li>
+                                <li>新增 <code><a href="#tile-panel-tile-edit">磁贴右键事件</a></code>,弹出<code>dropdown</code>菜单来实现删除功能</li>
+                                <li>新增了一个 <code><a href="#tile-event-update">缓存更新事件</a></code> ,用于缓存更新时返回缓存信息来进行后端的持久化操作</li>
+                                <li>新增<code>tile</code>参数 <code>refuseAnimate</code> ,默认false 是否禁用动画(true-禁用;false不禁用)</li>
+                                <li>修复了一个bug,这会导致小磁贴在左右移动时会叠在大磁贴上面</li>
+                            </ol>
+                        </blockquote>
+                        <h2 id = "tile-base">属性与方法</h2>
+                        <blockquote>
+                            <p><code>tile</code>中提供的方法现在被设计成类似<code>jquery</code>库的风格,可以满足链式调用。</p>
+                        </blockquote>
+                        <h3 id = "tile-render" lay-options = '{"hot": true}'>菜单渲染</h3>
+                        <blockquote><code>layui.tile(destination, option);</code>或者<code>new layui.tile(destination, option);</code></blockquote>
+                        <ul>
+                            <li>
+                                <p>参数<code>destination</code>必填,指定一个渲染的dom区域,类型String/DOM</p>
+                                <p>
+                                    <span style="color: red;">
+                                        请注意:指定的这个dom最好
+                                        <ol>
+                                            <li>加上class<code>layui-layer-tiles</code>设置成<code>position: absolute</code></li>
+                                            <li>加上class<code>layui-windows-desk-scroll</code>设置滚动条样式</code></li>
+                                            <li>再自行指定一个具体的高度和宽度</li>
+                                        </ol> 
+                                    </span>
+                                </p>
+                            </li>
+                            <li>
+                                <p>参数<code>option</code>可选,是一个配置项,通过设置不同的参数来生成不同的菜单</p>
+                                <table class="layui-table">
+                                    <colgroup>
+                                        <col width="200">
+                                        <col width="100">
+                                        <col>
+                                        <col width="200">
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <th>key</th>
+                                            <th>类型</th>
+                                            <th>描述</th>
+                                            <th>默认值</th>
+                                        </tr> 
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>id</td>
+                                            <td>String</td>
+                                            <td>(选填) 当前菜单的唯一编号,除非你要固定的使用缓存信息,否则建议不填随机抽取一个即可</td>
+                                            <td>{{constant.INSTANCEID}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>columns</td>
+                                            <td>Number</td>
+                                            <td>(选填) 当前菜单的最大列数,将会同步给下面的块对象</td>
+                                            <td>3</td>
+                                        </tr>
+                                        <tr>
+                                            <td>capacity</td>
+                                            <td>Number</td>
+                                            <td>(选填) 当前菜单的单位像素点,将会同步给下面的块对象</td>
+                                            <td>100</td>
+                                        </tr>
+                                        <tr>
+                                            <td>cacheable</td>
+                                            <td>Boolean</td>
+                                            <td>(选填) 当前实例是否允许开启缓存(true-开启缓存;false禁用缓存)</td>
+                                            <td>false</td>
+                                        </tr>
+                                        <tr>
+                                            <td>data</td>
+                                            <td>Array</td>
+                                            <td>(必填) 当前菜单的内容配置项,内容为<code><a href="#tile-struct-option">块的配置项</a></code></td>
+                                            <td>/</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </li>
+                            <li><p>返回值 <code>tileInstance</code>被创建好的菜单实例对象 </p></li>
+                        </ul>
+                        <blockquote>
+                            <p>data 格式 : <code>data</code>是一个数组,数组的元素是块的配置项;块的配置项里面有一个<code>source</code>,它也是一个数组,数组的元素是磁贴的配置项。</p>
+                        </blockquote>
+                        <h4 id = "tile-struct-option">块的配置项</h4>
+                        <table class="layui-table">
+                            <colgroup>
+                                <col width="200">
+                                <col width="100">
+                                <col>
+                                <col width="200">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>key</th>
+                                    <th>类型</th>
+                                    <th>描述</th>
+                                    <th>默认值</th>
+                                </tr> 
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>id</td>
+                                    <td>String</td>
+                                    <td>(选填) 当前块的唯一编号</td>
+                                    <td>{{constant.STRUCTID}}</td>
+                                </tr>
+                                <tr>
+                                    <td>name</td>
+                                    <td>String</td>
+                                    <td>(选填) 名称,展示在title上面,后期可以允许用户自定义</td>
+                                    <td>''</td>
+                                </tr>
+                                <tr>
+                                    <td>source</td>
+                                    <td>Array</td>
+                                    <td>(必填) 当前块的内容配置项,内容为<code><a href="#tile-render-option">磁贴的配置项</a></code></td>
+                                    <td>/</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <h4 id = "tile-render-option">磁贴的配置项</h4>
+                        <table class="layui-table">
+                            <colgroup>
+                                <col width="200">
+                                <col width="100">
+                                <col>
+                                <col width="200">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>key</th>
+                                    <th>类型</th>
+                                    <th>描述</th>
+                                    <th>默认值</th>
+                                </tr> 
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>id</td>
+                                    <td>String</td>
+                                    <td>(选填) 当前磁贴的唯一编号</td>
+                                    <td>{{constant.TILEID}}</td>
+                                </tr>
+                                <tr>
+                                    <td>name</td>
+                                    <td>String</td>
+                                    <td>(选填) 名称 ,与 <code>img</code>、 <code>content</code> 配置项需要至少传入一个</td>
+                                    <td>''</td>
+                                </tr>
+                                <tr>
+                                    <td>img</td>
+                                    <td>String</td>
+                                    <td>(选填) 引用图片路径 ,与 <code>name</code>、 <code>content</code> 配置项需要至少传入一个</td>
+                                    <td>''</td>
+                                </tr>
+                                <tr>
+                                    <td>content</td>
+                                    <td>String</td>
+                                    <td>(选填) html片段 ,与 <code>name</code>、 <code>img</code> 配置项需要至少传入一个</td>
+                                    <td>''</td>
+                                </tr>
+                                <tr>
+                                    <td>bgColor</td>
+                                    <td>rgba、hex等颜色字符串</td>
+                                    <td>(选填) 背景颜色 ,默认取layui主题颜色</td>
+                                    <td>/</td>
+                                </tr>
+                                <tr>
+                                    <td>color</td>
+                                    <td>rgba、hex等颜色字符串</td>
+                                    <td>(选填) 文字颜色 ,默认取layui主题颜色</td>
+                                    <td>/</td>
+                                </tr>
+                                <tr>
+                                    <td>x</td>
+                                    <td>Number</td>
+                                    <td>(选填) 磁贴的横坐标</td>
+                                    <td>0</td>
+                                </tr>
+                                <tr>
+                                    <td>y</td>
+                                    <td>Number</td>
+                                    <td>(选填) 磁贴的纵坐标</td>
+                                    <td>0</td>
+                                </tr>
+                                <tr>
+                                    <td>w</td>
+                                    <td>Number</td>
+                                    <td>(选填) 磁贴的宽度系数</td>
+                                    <td>1</td>
+                                </tr>
+                                <tr>
+                                    <td>h</td>
+                                    <td>Number</td>
+                                    <td>(选填) 磁贴的高度系数</td>
+                                    <td>1</td>
+                                </tr>
+                                <tr>
+                                    <td>refuseAnimate</td>
+                                    <td>Boolean</td>
+                                    <td>(选填) 是否禁用动画(true-禁用;false不禁用)</td>
+                                    <td>false</td>
+                                </tr>
+                                <tr>
+                                    <td>kv</td>
+                                    <td>Object</td>
+                                    <td>(选填) 补充参数,用于自定义保存内容</td>
+                                    <td>{}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <!-- 快捷菜单-简单示例 -- start -->
+                        <blockquote class="layui-elem-quote">
+                            <p>调用方法就可以根据配置项创建一个菜单</p>
+                        </blockquote>
+                        <div class = "layui-tab" lay-pre-code="快捷菜单-简单示例" lay-options="{title: 'HTML', encode: 'true'}" >
+                            <pre>
+{{ layui_html_head }}
+<div class="layui-card">
+    <div class="layui-card-header">快捷菜单-简单示例</div>
+    <div class="layui-card-body" style="height: 600px;">
+        <div class="layui-card-body" style="height: 600px;">
+            <div id="layui-tile-demo1" class="layui-layer-tiles layui-windows-desk-scroll"></div>
+        </div>
+    </div>
+</div>
+{{ layui_js_area }}
+<x3cscript type="text/javascript" >
+    layui.use('tile', function(){
+        // 封装配置项
+        let data = [{
+            name: "layui",
+            source: [{
+                    name: "layui官网",
+                    w: 2,
+                    h: 2,
+                    img: "../plugin/layuiframework/image/icon-1.png",
+                },{
+                    x:2,
+                    name: "layuiAdmin",
+                    color: "#FFFFFF",
+                },],
+            },{
+            source:[
+                {name: "test"}
+            ],
+        }];
+        // 快捷菜单渲染
+        layui.tile("#layui-tile-demo1", {data: data});
+    });
+</x3cscript>
+{{ layui_html_tail }}
+                            </pre>
+                        </div>
+                        <!-- 快捷菜单-简单示例 -- end -->
+                        <h3 id = "tile-event" >事件</h3>
+                        <blockquote><code>on(type, callback);</code>可以为实例添加监听事件,请注意该方法通过<code>tileInstance</code>实例调用</blockquote>
+                        <ul>
+                            <li><p>参数 <code> type </code> 是绑定事件的类型, 当前版本支持 <code> clickTile </code> 磁贴点击事件 和 <code> updateCache </code> 缓存更新事件 </p></li>
+                            <li><p>参数 <code> callback </code> 是一个回调函数,在上面事件触发时,会调用这个函数进行业务处理</p></li>
+                            <li><p>返回值 <code>tileInstance</code> 菜单实例对象 </p></li>
+                        </ul>
+                        <h4 id = "tile-event-click" lay-options = '{"hot": true}'>点击事件</h4>
+                        <blockquote><code>on('clickTile', callback);</code>可以为实例添加磁贴点击事件,请注意该方法通过<code>tileInstance</code>实例调用</blockquote>
+                        <ul>
+                            <li>
+                                <p>参数 <code> callback </code> 是一个回调函数,在上面事件触发时,会调用这个函数进行业务处理</p>
+                                <p>这个函数接收一个 <code> option </code> 的变量,这个变量包含下面的内容: </p>
+                                <ol>
+                                    <li>struct: 当前块的信息</li>
+                                    <li>tile: 当前磁贴的信息</li>
+                                </ol>
+                            </li>
+                            <li><p>返回值 <code>tileInstance</code> 菜单实例对象 </p></li>
+                        </ul>
+                        <h4 id = "tile-event-update" >缓存更新事件</h4>
+                        <blockquote> <sup>实验</sup> <code>on('updateCache', callback);</code>可以为实例添加缓存更新事件,请注意该方法通过<code>tileInstance</code>实例调用</blockquote>
+                        <ul>
+                            <li>
+                                <p>参数 <code> callback </code> 是一个回调函数,在上面事件触发时,会调用这个函数进行业务处理</p>
+                                <p>这个函数接收一个 <code> option </code> 的变量,这个变量包含下面的内容: </p>
+                                <ol>
+                                    <li>key: 当前使用的缓存key,用于不同实例之间的区分</li>
+                                    <li>data: 当前缓存的信息,包含所有的配置项信息</li>
+                                </ol>
+                            </li>
+                            <li><p>返回值 <code>tileInstance</code> 菜单实例对象 </p></li>
+                        </ul>
+                        <blockquote class="layui-elem-quote"> 缓存更新事件作为一个保留功能,这里暂时不提供示例 </blockquote>
+                        <blockquote class="layui-elem-quote">
+                            <p>点击下面的磁贴会弹出预存的 <code>kv</code> 值。</p>
+                        </blockquote>
+                        <!-- 快捷菜单-事件监听示例 -- start -->
+                        <div class = "layui-tab" lay-pre-code="快捷菜单-事件监听示例" lay-options="{title: 'HTML', encode: 'true'}" >
+                            <pre>
+{{ layui_html_head }}
+<div class="layui-card">
+    <div class="layui-card-header">快捷菜单-事件监听示例</div>
+    <div class="layui-card-body" style="height: 600px;">
+        <div class="layui-card-body" style="height: 600px;">
+            <div id="layui-tile-demo2" class="layui-layer-tiles layui-windows-desk-scroll"></div>
+        </div>
+    </div>
+</div>
+{{ layui_js_area }}
+<x3cscript type="text/javascript" >
+    layui.use('tile', function(){
+        // 封装配置项
+        let data = [{
+            name: "layui",
+            source: [{
+                    name: "layui官网",
+                    w: 2,
+                    h: 2,
+                    kv: {
+                        name: "layui官网"
+                    },
+                    img: "../plugin/layuiframework/image/icon-1.png",
+                },{
+                    name: "layuiAdmin",
+                    x: 2,
+                    kv: {
+                        name: "layuiAdmin"
+                    }
+                },],
+            },{
+            source:[
+                {name: "test", kv: { name: "洒洒水" }}
+            ],
+        }];
+        // 快捷菜单渲染 / 添加点击事件
+        layui.tile("#layui-tile-demo2", {data: data}).on('clickTile', function(option){
+            layui.layer.msg(JSON.stringify(option.tile.kv), {icon: 6});
+        });
+    });
+</x3cscript>
+{{ layui_html_tail }}
+                            </pre>
+                        </div>
+                        <!-- 快捷菜单-事件监听示例 -- end -->
+                        <h3>新增磁贴项</h3>
+                        <blockquote>提供两种方式新增磁贴项,但是更加建议初始化的时候就将配置项处理好</blockquote>
+                        <h4>添加磁贴项</h3>
+                        <blockquote> <sup>实验</sup> <code>addTile(tileOption);</code>可以新增一个块在上面创建一个磁贴,请注意该方法通过<code>tileInstance</code>实例调用</blockquote>
+                        <ul>
+                            <li><p>参数 <code> tileOption </code> 是<code><a href="#tile-render-option">磁贴的配置项</a></code>  </p></li>
+                        </ul>
+                        <h4>追加磁贴项</h3>
+                        <blockquote> <sup>实验</sup> <code>insertTile(structId, tileOption);</code>可以在指定的块上面追加一个磁贴,请注意该方法通过<code>tileInstance</code>实例调用</blockquote>
+                        <ul>
+                            <li><p>参数 <code> structId </code> 是块配置项的 <code> id </code> 属性,如果不清楚也可通过上面的方法添加，然后拖到指定的块中 </p></li>
+                            <li><p>参数 <code> tileOption </code> 是<code><a href="#tile-render-option">磁贴的配置项</a></code>  </p></li>
+                        </ul>
+                        <blockquote class="layui-elem-quote">
+                            <p>点击下面的按钮可以发现:</p>
+                            <ol>
+                                <li>添加磁贴项每次都会创建一个新的块</li>
+                                <li>追加磁贴项每次都是在指定的<code>layui</code>这个块下面新增磁贴</li>
+                                <li>由于磁贴配置项没有指定id,通过点击可以看出每一个磁贴的id都是唯一的</li>
+                            </ol>
+                        </blockquote>
+                        <!-- 快捷菜单-事件监听示例 -- start -->
+                        <div class = "layui-tab" lay-pre-code="快捷菜单-事件监听示例" lay-options="{title: 'HTML', encode: 'true'}" >
+                            <pre>
+{{ layui_html_head }}
+<div class="layui-card">
+    <div class="layui-card-header">快捷菜单-新增磁贴示例</div>
+    <div class="layui-card-body" style="height: 600px;">
+        <div class="layui-form-item">
+            <div class="layui-input-inline">
+                <div class = "layui-water-ripples-container" >
+                    <button class="layui-btn layui-btn-normal" id="layui-tile-demo3-addTile">添加磁贴项</button>
+                </div>
+            </div>
+            <div class="layui-input-inline">
+                <div class = "layui-water-ripples-container" >
+                    <button class="layui-btn layui-btn-normal" id="layui-tile-demo3-insertTile">追加磁贴项</button>
+                </div>
+            </div>
+        </div>
+        <div class="layui-card-body" style="height: 400px;">
+            <div id="layui-tile-demo3" class="layui-layer-tiles layui-windows-desk-scroll"></div>
+        </div>
+    </div>
+</div>
+{{ layui_js_area }}
+<x3cscript type="text/javascript" >
+    layui.use('tile', function(){
+        // 封装配置项
+        let data = [{
+            id: "layui",
+            name: "layui",
+            source: [{
+                    name: "layui官网",
+                    w: 2,
+                    h: 2,
+                    kv: {
+                        name: "layui官网"
+                    },
+                    img: "../plugin/layuiframework/image/icon-1.png",
+                },{
+                    name: "layuiAdmin",
+                    x: 2,
+                    kv: {
+                        name: "layuiAdmin"
+                    }
+                },],
+        }];
+        // 快捷菜单渲染 / 添加点击事件
+        var tileInstance = layui.tile("#layui-tile-demo3", {data: data}).on('clickTile', function(option){
+            layui.layer.msg(JSON.stringify(option.tile.id), {icon: 6});
+        });
+
+        // 绑定点击事件
+        $('#layui-tile-demo3-addTile').on('click', function(){
+
+            var tileOption = {
+                name: '添加磁贴'
+            };
+
+            tileInstance.addTile(tileOption);
+
+        });
+
+        $('#layui-tile-demo3-insertTile').on('click', function(){
+
+            var tileOption = {
+                name: '追加磁贴'
+            };
+
+            tileInstance.insertTile('layui',tileOption);
+            
+        });
+
+    });
+</x3cscript>
+{{ layui_html_tail }}
+                            </pre>
+                        </div>
+                        <!-- 快捷菜单-新增磁贴示例 -- end -->
+                        <h3 id = "tile-animate" >设置动画</h3>
+                        <blockquote><code>setAnimate(animated_classes, animated_liveness);</code>可以为实例添设置动画参数,请注意该方法通过<code>tileInstance</code>实例调用</blockquote>
+                        <ul>
+                            <li>
+                                <p>参数 <code> animated_classes </code> 是动画的类型, 传入类型是字符串的数组 {Array[String]}, 支持下面几个类型: </p>
+                                <ul>
+                                    <li>flip</li>
+                                    <li>bounceIn</li>
+                                    <li>flash</li>
+                                    <li>pulse</li>
+                                    <li>rubberBand</li>
+                                    <li>shake</li>
+                                    <li>headShake</li>
+                                    <li>swing</li>
+                                </ul>
+                            </li>
+                            <li><p>参数 <code> animated_liveness </code> 是一个动画系数,取值范围是 [0,1] ,值越大动画越频繁</p></li>
+                            <li><p>返回值 <code>tileInstance</code> 菜单实例对象 </p></li>
+                        </ul>
+                        <!-- 快捷菜单-设置动画示例 -- start -->
+                        <div class = "layui-tab" lay-pre-code="快捷菜单-设置动画示例" lay-options="{title: 'HTML', encode: 'true'}" >
+                            <pre>
+{{ layui_html_head }}
+<div class="layui-card">
+    <div class="layui-card-header">快捷菜单-设置动画示例</div>
+    <div class="layui-card-body" style="height: 600px;">
+        <div class="layui-card-body" style="height: 600px;">
+            <div id="layui-tile-demo4" class="layui-layer-tiles layui-windows-desk-scroll"></div>
+        </div>
+    </div>
+</div>
+{{ layui_js_area }}
+<x3cscript type="text/javascript" >
+    layui.use('tile', function(){
+        // 封装配置项
+        let data = [{
+            name: "layui",
+            source: [{
+                    name: "layui官网",
+                    w: 2,
+                    h: 2,
+                    kv: {
+                        name: "layui官网"
+                    },
+                    img: "../plugin/layuiframework/image/icon-1.png",
+                },{
+                    name: "layuiAdmin",
+                    x: 2,
+                    kv: {
+                        name: "layuiAdmin"
+                    }
+                },],
+            },{
+            source:[
+                {name: "test", kv: { name: "洒洒水" }}
+            ],
+        }];
+        // 快捷菜单渲染 / 添加点击事件 / 设置动画
+        layui.tile("#layui-tile-demo4", {data: data}).on('clickTile', function(option){
+            layui.layer.msg(JSON.stringify(option.tile.kv), {icon: 6});
+        }).setAnimate(["flip","bounceIn","flash","pulse","rubberBand","shake","headShake","swing"], 0.3);
+    });
+</x3cscript>
+{{ layui_html_tail }}
+                            </pre>
+                        </div>
+                        <!-- 快捷菜单-设置动画示例 -- end -->
+                        <h3 >缓存操作</h3>
+                        <blockquote>缓存操作先是要开启/关闭缓存,然后再设置是否自动缓存。自动缓存是指在配置项信息更新时将最新的信息更新到缓存中。</blockquote>
+                        <h4 lay-ignore>使用缓存</h4>
+                        <blockquote> <sup>实验</sup> <code>enableCache()</code>, 可以开启缓存的功能。它与构造函数配置项里面的 <code>cacheable</code> 属性的区别是：后者会在初始化时使用缓存信息对实例进行初始化。 </blockquote>
+                        <h4 lay-ignore>禁用缓存</h4>
+                        <blockquote> <sup>实验</sup> <code>disableCache()</code>, 可以禁用缓存的功能。 </blockquote>
+                        <h4 lay-ignore>自动缓存</h4>
+                        <blockquote> <sup>实验</sup> <code>enableAutoCache()</code>, 可以在配置项信息更新时将最新的信息更新到缓存中。 </blockquote>
+                        <h4 lay-ignore>清空当前缓存</h4>
+                        <blockquote> <sup>实验</sup> <code>resetData()</code>, 可以将当前实例的缓存信息清除。 </blockquote>
+                        <!-- <h4 lay-ignore>清空全部缓存</h4>
+                        <blockquote> <sup>实验</sup> <code>layui.tile.resetAllData()</code>, 可以将 <code>tile</code> 全部实例的缓存信息清除。 </blockquote> -->
+                        <h3>面板操作</h3>
+                        <h4>块拖动</h4>
+                        <blockquote>鼠标放在快捷菜单中的一个块上面,右上方会出现一个小图标。按住标题可以将整改块的位置向上或向下拖动</blockquote>
+                        <h4>磁贴拖动</h4>
+                        <blockquote>鼠标放在快捷菜单中的一个磁贴上面,按住可以将它的位置进行拖动。如果将它拖动在最下方没有块的位置,那个位置会新建一个块。</blockquote>
+                        <h4>编辑块标题</h4>
+                        <blockquote>鼠标点击块标题的位置就会出现输入框,输入后失去焦点就编辑成功了</blockquote>
+                        <h4 id = "tile-panel-tile-edit">编辑磁贴</h4>
+                        <blockquote>鼠标放在快捷菜单中的一个磁贴上面,右键可以呼出<code>dropdown</code>菜单。这里可以修改磁贴的尺寸和删除这个磁贴。</blockquote>
+                        <h3>自定义内容</h3>
+                        <blockquote>当前磁贴配置项中新增<code>content</code>配置项,可以通过插入html的方式引入其它的插件。</blockquote>
+                        <!-- 快捷菜单-自定义内容示例 -- start -->
+                        <div class = "layui-tab" lay-pre-code="快捷菜单-自定义内容示例" lay-options="{title: 'HTML', encode: 'true'}" >
+                            <pre>
+{{ layui_html_head }}
+<div class="layui-card">
+    <div class="layui-card-header">快捷菜单-自定义内容示例</div>
+    <div class="layui-card-body" style="height: 600px;">
+        <div class="layui-card-body" style="height: 600px;">
+            <div id="layui-tile-demo5" class="layui-layer-tiles layui-windows-desk-scroll"></div>
+        </div>
+    </div>
+</div>
+{{ layui_js_area }}
+<x3cscript type="text/javascript" >
+    layui.use('tile', function(){
+        // 封装配置项
+        let data = [{
+            name: "layui",
+            source: [{
+                    name: "layui官网",
+                    w: 2,
+                    h: 2,
+                    kv: {
+                        name: "layui官网"
+                    },
+                    img: "../plugin/layuiframework/image/icon-1.png",
+                },{
+                    name: "layuiAdmin",
+                    x: 2,
+                    kv: {
+                        name: "layuiAdmin"
+                    }
+                },],
+            },{
+            source:[{
+                content: `<div id = 'layui-tile-demo5-content'></div>`, 
+                kv: { 
+                    name: "洒洒水" 
+                }, 
+                refuseAnimate: true
+            }],
+        }];
+        // 快捷菜单渲染 / 添加点击事件 / 设置动画
+        var tileInstance = layui.tile("#layui-tile-demo5", {data: data}).on('clickTile', function(option){
+            layui.layer.msg(JSON.stringify(option.tile.kv), {icon: 6});
+        }).setAnimate(["flip","bounceIn","flash","pulse","rubberBand","shake","headShake","swing"], 0.3);
+        // 自定义内容
+        // 这里可以拿到这个div,可以通过echarts渲染统计图,可以通过jessibuca渲染视频等
+        $('#layui-tile-demo5-content').text('自定义内容')
+    });
+</x3cscript>
+{{ layui_html_tail }}
+                            </pre>
+                        </div>
+                        <!-- 快捷菜单-自定义内容示例 -- end -->
+                        <div style="width: 100%;height: 360px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+     <!--    请勿在项目正式环境中引用该 layui.js 地址     -->
+    <!-- <script type="text/javascript" src="//cdn.staticfile.org/layui/2.8.17/layui.js"></script> -->
+    <script type="text/javascript" src="../plugin/layui/layui.js"></script>
+    <script type="text/javascript" src="../config.js"></script>
+    <script type="text/javascript" src="../plugin/layuiframework/js/util.js"></script>
+    <!-- 当前使用特殊版本的layui,已将colortheme打包,这里不用单独引用 -- https://gitee.com/giteetcj/layui/tree/layuiframework/ -->
+    <!-- <script type="text/javascript" src="../plugin/layuiframework/js/colortheme.js"></script> -->
+    <script type="text/javascript" src="../plugin/lay/example.js"></script>
+    <script type="text/javascript">
+        layui.example.render();
+        layui.outline.render();
+        // layui.util.fixbar();
+        layui.colortheme.run();
+    </script>
+    </body>
+</html>
+
+

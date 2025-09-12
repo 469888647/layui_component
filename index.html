@@ -1,0 +1,126 @@
+<!--
+    首页html骨架:
+ -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>layui测试</title>
+    <!-- 指定当前的MIME是text/html;字符集为UTF8 -->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <!-- 指示 IE 使用其可用的最高版本模式（即最标准的模式）来渲染页面; 允许在 IE 上利用 Google Chrome Frame 插件调用Chrome 的渲染引擎。后面这个插件已经过时了。 -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,Chrome=1" />
+    <!-- 防止MIME类型伪造 -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <!-- 仅在发生跨域访问时，发送只包含host的Referer信息，但在同域下还是完整的，而只有协议、域名和端口都一致时，浏览器才认为是同域 -->
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <!--  大致起完美适配的作用,试开发者不管像素比,只需按照css像素编写代码即可     -->
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <!-- 跨站脚本攻击防护（XSS Protection）启用浏览器内置防护 -->
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+
+    <link href="./plugin/layui/css/layui.css" rel="stylesheet">
+    <link href="./plugin/layuiframework/css/frame.css" rel="stylesheet">
+</head>
+
+<body class="layui-layout-body">
+    <div id="lay-framework">
+        <div class="layui-layout layui-layout-admin">
+            <div class="layui-header">
+                <!-- 标题放在了这里 -->
+                <div class="layui-logo layui-hide-xs layui-bg-black">
+                    <i class="layui-icon layui-icon-release"></i>
+                    <span class="layui-logo-span">功能菜单</span>
+                </div>
+                <!-- 头部区域（可配合layui 已有的水平导航） -->
+                <ul class="layui-nav layui-layout-left">
+                    <li class="layui-nav-item layadmin-flexible" lay-unselect>
+                        <a href="javascript:;" lay-header-event="flexible" title="侧边伸缩">
+                            <i class="layui-icon layui-icon-shrink-right" id="lay-framework-flexible"></i>
+                        </a>
+                    </li>
+                    <!-- 跳转gitee, layui-hide-xs 意味者如果屏幕宽度过小 <765px 这项菜单会隐藏 -->
+                    <li class="layui-nav-item layui-hide-xs" lay-unselect>
+                        <a href="https://gitee.com/giteetcj/layui/tree/layuiframework" target="_blank" title="gitee地址">
+                            <i class="layui-icon layui-icon-website"></i>
+                        </a>
+                    </li>
+                    <li class="layui-nav-item" lay-unselect>
+                        <a href="javascript:;" lay-header-event="refresh" title="刷新">
+                            <i class="layui-icon layui-icon-refresh-3"></i>
+                        </a>
+                    </li>
+                </ul>
+                <!-- 头部区域 - 靠右（可配合layui 已有的水平导航） -->
+                <ul class="layui-nav layui-layout-right">
+                    <li class="layui-nav-item" lay-unselect>
+                        <a href="javascript:;" lay-header-event="theme">
+                            <i class="layui-icon layui-icon-theme"></i>
+                        </a>
+                    </li>
+                    <li class="layui-nav-item" lay-unselect>
+                        <a href="javascript:;" lay-header-event="fullscreen">
+                            <i class="layui-icon layui-icon-screen-full"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <!-- 左侧菜单 -->
+            <div class="layui-side layui-side-menu layui-bg-black">
+                <div class="layui-side-scroll">
+                    <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
+                    <ul class="layui-nav layui-nav-tree" lay-shrink="all" id="lay-framework-side-menu"
+                        lay-filter="lay-framework-side-menu">
+                        <li class="layui-nav-item layui-nav-itemed">
+                            <a href="javascript:;" lay-tips="主页" lay-direction="2" lay-page-key="0">
+                                <i class="layui-icon layui-icon-home"></i>
+                                <cite>主页</cite>
+                            </a>
+                        </li>
+                        <li class="layui-nav-item">
+                            <a href="javascript:;" lay-tips="表单扩展" lay-direction="2" lay-page-key="formPlusExp">
+                                <i class="layui-icon layui-icon-form"></i>
+                                <cite><span>表单扩展</span><span
+                                        class="layui-font-12 layui-font-gray">formplus</span><span class="layui-badge layui-bg-green" title="component组件">C</span></cite>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <!-- 页面标签 -->
+            <div class="lay-framework-pagetabs" id="lay-framework-tabs">
+                <div class="layui-windows-group">
+                    <div class="layui-icon lay-framework-tabs-control layui-icon-prev" lay-header-event="rollPageLeft">
+                    </div>
+                    <div class="layui-icon lay-framework-tabs-control layui-icon-next" lay-header-event="rollPageRight">
+                    </div>
+                    <div class="lay-framework-tab">
+                        <ul class="lay-framework-tab-title" id="lay-framework-tab-title">
+                            <li class="lay-framework-tab layui-this" lay-id="0" lay-page-key="0">
+                                <i class="layui-icon layui-icon-home"></i>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-body" id="lay-framework-tab-body">
+                <!-- 内容主体区域 -->
+                <div class="layadmin-tabsbody-item layui-this" lay-id="0">
+                    <iframe src="./plugin/layuiframework/html/homepage.html" frameborder="0"
+                        class="layadmin-iframe"></iframe>
+                </div>
+            </div>
+
+            <!-- 辅助元素，一般用于移动设备下遮罩 -->
+            <div class="layadmin-body-shade" lay-header-event="flexible"></div>
+        </div>
+    </div>
+    <script type="text/javascript" src="./plugin/layui/layui.js"></script>
+    <script type="text/javascript" src="./plugin/layuiframework/js/util.js"></script>
+    <script type="text/javascript" src="./plugin/layuiframework/js/formplus.js"></script>
+    <script type="text/javascript" src="./config.js"></script>
+    <script type="text/javascript" src="./plugin/layuiframework/js/frame.js"></script>
+</body>
+
+</html>

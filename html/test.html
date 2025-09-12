@@ -1,0 +1,109 @@
+<!--
+    首页html骨架:
+ -->
+<!DOCTYPE html>
+<html>
+    <head>
+
+        <title>layui测试</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta name="referrer" content="strict-origin-when-cross-origin">
+        <!--  大致起完美适配的作用,试开发者不管像素比,只需按照css像素编写代码即可     -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+        <link href="../plugin/layui/css/layui.css" rel="stylesheet">
+    </head>
+    <body class="layui-layout-body">
+        <div class="layui-card">
+            <div class="layui-card-header layui-hide-xs">简单示例</div>
+            <div class="layui-card-body" style="height:741px;padding: 0;">   <!-- 741  767.98  474  -->
+                <div id = "echartsDom" style="width: 100%; height: 100%;"></div>
+                <div id = "echartsDomForm" style="position: absolute; width: 100%; height: 100%;top: 0;">
+                
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript" src="../plugin/layui/layui.js"></script>
+        <script type="text/javascript" src="../plugin/echarts-4.9.1.min.js"></script>
+        <script type="text/javascript" src="../plugin/echarts-gl.min.js"></script>
+        <script type="text/javascript">
+            // var musicInst = layui.music({
+            //                 elem: '#music',loop:true,effect:'panner'
+            //             });
+            // var uploadBtn = document.getElementById('upload');
+            // uploadBtn.onchange = function(){
+            //     if (uploadBtn.files.length !== 0) {
+            //         var file = uploadBtn.files[0];
+            //         try {
+            //             musicInst.play(file);
+            //         //     layui.music.loadFile(file, function(buffer){
+            //         //     layui.music.playBuffer(buffer);
+            //         // });
+            //         } catch (error) {
+            //             layui.layer.msg(error)
+            //         }
+            //         uploadBtn.value='';
+            //     };
+            // };
+            // musicInst.play("https://ri-sycdn.kuwo.cn/a162e7d39e49302fa27d2ea5a1cb6390/65e6c65c/resource/n1/87/57/3082041059.mp3");
+
+
+
+            // var option = {
+            //     tooltip: {},
+            //     visualMap: {
+            //         show: false,
+            //         min: 0.1,
+            //         max: 4,
+            //         inRange: {
+            //             color: ['#010103', '#2f490c', '#b0b70f', '#fdff44', '#fff']
+            //         }
+            //     },
+            //     xAxis3D: {
+            //         type: 'value'
+            //     },
+            //     yAxis3D: {
+            //         type: 'value'
+            //     },
+            //     zAxis3D: {
+            //         type: 'value',
+            //         min: -6,
+            //         max: 6
+            //     },
+            //     grid3D: {
+            //         show: false,
+            //         environment: '#000',
+            //         viewControl: {
+            //             distance: 100
+            //         },
+            //         postEffect: {
+            //             enable: true,
+            //             FXAA: {
+            //                 enable: true
+            //             }
+            //         },
+            //         light: {
+            //             main: {
+            //                 shadow: true,
+            //                 intensity: 10,
+            //                 quality: 'high'
+            //             },
+            //         }
+            //     },
+            //     series: [{
+            //         type: 'bar3D',
+            //         silent: true,
+            //         shading: 'lambert',
+            //         data: [],
+            //         barSize: 1,
+            //         lineStyle: {
+            //             width: 4
+            //         },
+            //         // animation: false,
+            //         animationDurationUpdate: 60
+            //     }]
+            // };
+            // var myChart = echarts.init($('#canvas').get(0));
+            // myChart.setOption(option, true, false);
+        </script>
+    </body>
+</html>

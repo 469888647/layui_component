@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>colortheme使用示例</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta name="referrer" content="strict-origin-when-cross-origin">
+        <!--  大致起完美适配的作用,试开发者不管像素比,只需按照css像素编写代码即可     -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+        <!--    请勿在项目正式环境中引用该 layui.css 地址     -->
+       <!--  <link href="//cdn.staticfile.org/layui/2.8.17/css/layui.css" rel="stylesheet"> -->
+        <link href="../plugin/layui/css/layui.css" rel="stylesheet">
+        <!-- 当前使用特殊版本的layui,已将colortheme打包,这里不用单独引用 -- https://gitee.com/giteetcj/layui/tree/layuiframework/ -->
+        <!-- <link href="../plugin/layuiframework/css/colortheme.css" rel="stylesheet"> -->
+        <link href="../plugin/layuiframework/css/index.css" rel="stylesheet">
+        <style>
+            .layui-outline-container .layui-outline-bth,
+            .layui-outline-container .layui-outline-side{
+                z-index: 1;
+            }
+
+            .layui-outline-side-fixed .layui-outline-ul li[level="4"]{
+                padding-left: 56px;
+            }
+
+            h2 {
+                padding-left: 15px;
+            }
+
+            h3 {
+                padding-left: 30px;
+            }
+
+            h4 {
+                padding-left: 45px;
+            }
+
+            blockquote ul,blockquote ol{
+                margin-left: 15px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="layui-fluid">
+            <!-- 大屏时占大半屏幕(右侧为outline留位置),小屏时占全部屏幕 -->
+            <div class="layui-col-xs12 layui-col-md10">
+                <div class = "ws-content">
+                    <div class = "layui-text ws-text">
+                        <h1 lay-ignore >颜色主题</h1>
+                        <blockquote class="layui-elem-quote">
+                            <p><sup>实验</sup>颜色主题<code>colortheme</code>是对2.8版本的layui.css中的颜色进行归类。使用css变量实现颜色主题的切换;仅对相同的颜色进行合并定义。PR #1410</p>
+                        </blockquote>
+                        
+                        <h2>文件依赖</h2>
+                        <blockquote>
+                            <p>以下的功能是对模块<code>colortheme</code>的描述,它除了需要<code>colortheme.js</code>文件之外,还需要引用下面的内容。</p>
+                        </blockquote>
+                        <h3 lay-ignore>css文件引用</h3>
+                        <blockquote>
+                            <p>在引用了<code>layui.css</code>后,还需要引用<code>colortheme.css</code>。当然,如果是当前分支进行打包<code>colortheme.css</code>就打包进了<code>layui.css</code>中,不用额外引用了</p>
+                        </blockquote>
+                        <h3 lay-ignore>js文件引用</h3>
+                        <blockquote>
+                            <p>在引用了<code>layui.js</code>后,还需要注意下面模块的加入。当然,如果是当前分支进行打包就包括下面的模块了。</p>
+                            <ul>
+                                <li>模块<code>jquery</code></li>
+                                <li>模块<code>layer</code></li>
+                                <li>模块<code>util</code><span style="color: red;">可能会使用</span></li>
+                            </ul>
+                        </blockquote>
+                        <h2>基础介绍</h2>
+                        <blockquote>
+                            <p>最开始这个功能是为了将<a target="_blank" href="https://dev.layuion.com/themes/layuiadmin/">layuiAdmin</a>里面的颜色设置抽取出来使用。后面用到css变量设置后就干脆将所有的颜色都提取出来设置。</p>
+                            <p>在使用过程中需要注意一下几点:</p>
+                            <ol>
+                                <li>合并颜色的样式会有重复,没有计算颜色的权重,会导致部分颜色设置失效。</li>
+                                <li>这个可视化配置功能是参照layuiAdmin的主题设置</li>
+                                <li><code>colortheme</code>功能需要手动开启,在引入css和js文件之后,调用<code>layui.colortheme.run()</code>开启功能</li>
+                            </ol>
+                        </blockquote>
+                        <h2>属性与方法</h2>
+                        <h3>开启使用</h3>
+                        <blockquote><code>layui.colortheme.run();</code></blockquote>
+                        <blockquote>
+                            在引用了css和js文件之后,需要调用一下这个方法才能启用<code>colortheme</code>模块。
+                        </blockquote>
+                        <h3>设置配色</h3>
+                        <blockquote><code>layui.colortheme.setTheme(key);</code></blockquote>
+                        <ul>
+                            <li>
+                                <p>参数<code>key</code>是一个配色的id,当前支持下面这些主题</p>
+                                <table class="layui-table">
+                                    <colgroup>
+                                        <col width="200">
+                                        <col width="200">
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <th>id</th>
+                                           <th>名称</th>
+                                        </tr> 
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>default</td>
+                                            <td>默认配色</td>
+                                        </tr>
+                                        <tr>
+                                            <td>classicBlackHeader</td>
+                                            <td>经典黑头</td>
+                                        </tr>
+                                        <tr>
+                                            <td>darkBlue</td>
+                                            <td>藏蓝</td>
+                                        </tr>
+                                        <tr>
+                                            <td>coffee</td>
+                                            <td>咖啡</td>
+                                        </tr>
+                                        <tr>
+                                            <td>purpleRed</td>
+                                            <td>紫红</td>
+                                        </tr>
+                                        <tr>
+                                            <td>ocean</td>
+                                            <td>海洋</td>
+                                        </tr>
+                                        <tr>
+                                            <td>green</td>
+                                            <td>墨绿</td>
+                                        </tr>
+                                        <tr>
+                                            <td>red</td>
+                                            <td>活力橙</td>
+                                        </tr>
+                                        <tr>
+                                            <td>fashionRed</td>
+                                            <td>时尚红</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            
+                            </li>
+                            
+                        </ul>
+                        <h3 id = "colortheme-popup" lay-options = '{"hot": true}'>可视化配置</h3>
+                        <blockquote><code>layui.colortheme.popup();</code></blockquote>
+                        <blockquote>
+                            <p>弹出一个右侧的抽屉层,这个是内置的可视化配置界面,是模拟的layuiAdmin的主题设置</p>
+                        </blockquote>
+                        <!-- 切换主题 -- start -->
+                        <div class = "layui-tab" lay-pre-code="切换主题" lay-options="{title: 'HTML', encode: 'true'}" >
+                            <pre>
+    {{ layui_html_head }}
+    <div class="layui-card">
+        <div class="layui-card-header">切换主题</div>
+        <div class="layui-card-body">
+            <button class="layui-btn" id="layui-colortheme-demo3">点击弹出切换页面</button>
+        </div>
+    </div>
+    {{ layui_js_area }}
+    <x3cscript type="text/javascript" >
+        layui.use('colortheme', function(){
+            // 启用颜色主题
+            layui.colortheme.run();
+            // 添加点击事件监听
+            $('#layui-colortheme-demo3').on('click', function(){
+                layui.colortheme.popup();
+            });
+        });
+    </x3cscript>
+    {{ layui_html_tail }}
+                            </pre>
+                        </div>
+                        <!-- 切换主题 -- end -->
+                        <div style="width: 100%;height: 360px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+     <!--    请勿在项目正式环境中引用该 layui.js 地址     -->
+    <!-- <script type="text/javascript" src="//cdn.staticfile.org/layui/2.8.17/layui.js"></script> -->
+    <script type="text/javascript" src="../plugin/layui/layui.js"></script>
+    <script type="text/javascript" src="../config.js"></script>
+    <script type="text/javascript" src="../plugin/layuiframework/js/util.js"></script>
+    <!-- 当前使用特殊版本的layui,已将colortheme打包,这里不用单独引用 -- https://gitee.com/giteetcj/layui/tree/layuiframework/ -->
+    <!-- <script type="text/javascript" src="../plugin/layuiframework/js/colortheme.js"></script> -->
+    <script type="text/javascript" src="../plugin/lay/example.js"></script>
+    <script type="text/javascript">
+        layui.example.render();
+        layui.outline.render();
+        // layui.util.fixbar();
+        layui.colortheme.run();
+    </script>
+    </body>
+</html>
+
+
