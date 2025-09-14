@@ -3,7 +3,7 @@
  */
 ("use strict");
 layui.define(['jquery', 'element', 'code'], function(exports){
-  
+
   let handler = {
 
     render: function(){
@@ -68,7 +68,7 @@ layui.define(['jquery', 'element', 'code'], function(exports){
       <!-- 跨站脚本攻击防护（XSS Protection）启用浏览器内置防护 -->
       <meta http-equiv="X-XSS-Protection" content="1; mode=block">
       <!--  请勿在项目正式环境中引用该 layui.css 地址    -->
-      <!-- <link href="https://469888647.github.io/layui/plugin/layui/css/layui.css" rel="stylesheet"> -->
+      <!-- <link href="https://469888647.github.io/layui_component/plugin/layui/css/layui.css" rel="stylesheet"> -->
       <link href="../plugin/layui/css/layui.css" rel="stylesheet">
       <!--  以下功能在新建版本中有效  -->
     </head>
@@ -76,9 +76,8 @@ layui.define(['jquery', 'element', 'code'], function(exports){
       `;
       handler.template['layui_js_area'] = `
     <!--  请勿在项目正式环境中引用该 layui.js 地址    -->
-    <!-- <script type="text/javascript" src="https://469888647.github.io/layui/plugin/layui/layui.js"></script> -->
+    <!-- <script type="text/javascript" src="https://469888647.github.io/layui_component/plugin/layui/layui.js"></script> -->
     <script type="text/javascript" src="../plugin/layui/layui.js"></script>
-    <script type="text/javascript" src="../plugin/layuiframework/js/formplus.js"></script>
     <!--  以上功能在新建版本中有效  -->
       `;
       handler.template['layui_html_tail'] = `
@@ -94,7 +93,7 @@ layui.define(['jquery', 'element', 'code'], function(exports){
     },
 
   };
-  
+
   /**
    *  将模块放入layui中
    */
