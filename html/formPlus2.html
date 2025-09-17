@@ -17,6 +17,7 @@
         <!-- 当前使用的layui是新建分支, gitee地址 -- https://gitee.com/giteetcj/layui/tree/layuiframework/ -->
         <link href="../plugin/layui/css/layui.css" rel="stylesheet">
         <link href="../plugin/layuiframework/css/index.css" rel="stylesheet">
+        <!-- <link href="../plugin/layuiframework/css/formplus.css" rel="stylesheet"> -->
         <style>
             .layui-outline-side-fixed .layui-outline-ul li[level="4"]{
                 padding-left: 56px;
@@ -1901,6 +1902,12 @@ layui.formplus.registerConverter('demoForm',
                                     <td>复选模式下，选择节点后是否自动收起下拉框</td>
                                     <td>false</td>
                                 </tr>
+                                <tr>
+                                    <td><sup>新增</sup><code>label</code></td>
+                                    <td>label 风格</td>
+                                    <td>复选模式下，是否展示 label 风格(宽度不得小于 300px 否则样式会错乱)</td>
+                                    <td>false</td>
+                                </tr>
                             </tbody>
                         </table>
                         <p> <strong><code>lay-options</code> 异步请求配置项：</strong> </p> 
@@ -2048,10 +2055,10 @@ layui.formplus.registerConverter('demoForm',
                 <div class="layui-form-item">
                     <div class="layui-inline">
                         <label class="layui-form-label">渲染后设置树</label>
-                        <div class="layui-input-block">
+                        <div class="layui-input-block" style="width: 300px;">
                             <div class="layui-unselect layui-form-select">
                                 <div class="layui-select-title"  >
-                                    <input type="text" class="layui-input" autocomplete="false" placeholder="请选择" name = "tree2" lay-options = "{'id':'selectTree-demo02','checkbox':true,'data':[],'customName': { 'title':'cityName' },'showCheckbox': true }" lay-filter = "selectTree-demo02" />
+                                    <input type="text" class="layui-input" autocomplete="false" placeholder="请选择" name = "tree2" lay-options = "{'id':'selectTree-demo02','checkbox':true,'data':[],'customName': { 'title':'cityName' },'showCheckbox': true, 'label': true }" lay-filter = "selectTree-demo02" />
                                 </div>
                             </div>
                         </div>
@@ -2601,6 +2608,7 @@ layui.formplus.registerConverter('demoForm',
     <script type="text/javascript" src="../plugin/layuiframework/js/util.js"></script>
     <script type="text/javascript" src="../plugin/lay/example.js"></script>
     <script type="text/javascript" src="../plugin/layuiframework/js/outline.js"></script>
+    <!-- <script type="text/javascript" src="../plugin/layuiframework/js/formplus.js"></script> -->
     <script type="text/javascript">
         layui.example.render();
         layui.outline.render();
