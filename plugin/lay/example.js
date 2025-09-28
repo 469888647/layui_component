@@ -2,7 +2,7 @@
  * example通过扫描特定的pre里面的内容形成左边示例右边代码风格的页面样式
  */
 ("use strict");
-layui.define(['jquery', 'element', 'code'], function(exports){
+layui.define(['jquery', 'element', 'util', 'code'], function(exports){
 
   let handler = {
 
@@ -18,7 +18,7 @@ layui.define(['jquery', 'element', 'code'], function(exports){
         // let matchRes = preHtml.match(reg);
         // let scriptStr = matchRes[1];
         let reg = /{{[^{|^}]+}}/g;
-        let showHtml = preHtml.replace(reg, (s) => "");
+        let showHtml = layui.util.unescape(preHtml.replace(reg, (s) => ""));// 转义一下，代码里面就提前转义
         let codeHtml = preHtml.replace(reg, function(str){
           let m = str.match(/{{\s*(\S+)\s*}}/);
           return handler.replaceTemplate(m[1]);

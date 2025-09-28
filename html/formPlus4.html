@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>formPlus表单扩展</title>
+        <!-- 指定当前的MIME是text/html;字符集为UTF8 -->
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <!-- 指示 IE 使用其可用的最高版本模式（即最标准的模式）来渲染页面; 允许在 IE 上利用 Google Chrome Frame 插件调用Chrome 的渲染引擎。后面这个插件已经过时了。 -->
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,Chrome=1" />
+         <!-- 防止MIME类型伪造 -->
+        <meta http-equiv="X-Content-Type-Options" content="nosniff">
+        <!-- 仅在发生跨域访问时，发送只包含host的Referer信息，但在同域下还是完整的，而只有协议、域名和端口都一致时，浏览器才认为是同域 -->
+        <meta name="referrer" content="strict-origin-when-cross-origin">
+        <!--  大致起完美适配的作用,试开发者不管像素比,只需按照css像素编写代码即可     -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+        <!-- 跨站脚本攻击防护（XSS Protection）启用浏览器内置防护 -->
+        <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+        <!-- 当前使用的layui是新建分支, gitee地址 -- https://gitee.com/giteetcj/layui/tree/layuiframework/ -->
+        <link href="../plugin/layui/css/layui.css" rel="stylesheet">
+        <link href="../plugin/layuiframework/css/index.css" rel="stylesheet">
+        <style>
+            .layui-outline-side-fixed .layui-outline-ul li[level="4"]{
+                padding-left: 56px;
+            }
+
+            h2 {
+                padding-left: 15px;
+            }
+
+            h3 {
+                padding-left: 30px;
+            }
+
+            h4 {
+                padding-left: 45px;
+            }
+
+            blockquote ul,blockquote ol{
+                margin-left: 15px;
+            }
+
+           
+        </style>
+    </head>
+    <body>
+        <div class="layui-card">
+        <div class="layui-card-header">表单渲染示例</div>
+        <div class="layui-card-body">
+            <!-- 表单结构 -->
+            <div class="layui-form layui-form-pane" lay-filter="formplus-form-demo1">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">异步获取信息</label>
+                        <div class="layui-input-block" style="width: 500px;">
+                            <div class="layui-unselect layui-form-select">
+                                <div class="layui-select-title"  >
+                                    <input type="text" class="layui-input" lay-tag="MultiSelect" autocomplete="false" placeholder="请选择" name = "tree1" lay-options = "{'url':'../plugin/json/selecttree.json','customName': { 'title':'cityName' }}"  />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="layui-form-item">
+                    <div class="layui-input-inline">
+                        <div class = "layui-water-ripples-container" lay-options = "{'type':'out','trigger': 'always', 'color': '#ff0000'}">
+                            <button class="layui-btn layui-btn-normal" id="formplus-bth-demo1-change">赋值</button>
+                        </div>
+                    </div>
+                    <div class="layui-input-inline">
+                        <div class = "layui-water-ripples-container">
+                            <button class="layui-btn layui-btn-normal" id="formplus-bth-demo1-val">formplus取值</button>
+                        </div>
+                    </div>
+                    <div class="layui-input-inline">
+                        <div class = "layui-water-ripples-container">
+                            <button class="layui-btn" lay-submit="" lay-filter="formplus-bth-demo1">form取值</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 当前使用的layui是新建分支, gitee地址 -- https://gitee.com/giteetcj/layui/tree/layuiframework/ -->
+    <script type="text/javascript" src="../plugin/layui/layui.js"></script>
+    <script type="text/javascript" src="../config.js"></script>
+    <script type="text/javascript" src="../plugin/layuiframework/js/util.js"></script>
+    <script type="text/javascript" src="../plugin/lay/example.js"></script>
+    <script type="text/javascript" src="../plugin/layuiframework/js/outline.js"></script>
+    <script type="text/javascript" src="../plugin/layuiframework/js/formplus.js"></script>
+    <script type="text/javascript">
+
+        layui.use('formplus', function(){
+
+            const LAY_VALUE = 'lay-value';
+            const LAY_TITLE = 'lay-title';
+            
+            /**
+             * @namespace rollPage
+             * @private
+             * @desc
+             * > 实现选项卡定位逻辑
+             * > 这里的逻辑是完全照搬layuiAdmin里面的
+             * 
+             */
+            var rollPage = {
+                /**
+                 * @inner 将内容向右边移动一个可视化距离
+                 */
+                left: function left(root, index) {
+                    
+                    var tabsLeft = parseFloat(root.css("left"));
+                    
+                    if (!tabsLeft && tabsLeft <= 0) return;
+                    
+                    var prefLeft = -(tabsLeft + root.outerWidth());
+                    
+                    root.children("li").each(function (index, item) {
+                        var li = $(item),
+                        left = li.position().left;
+                        if (left >= prefLeft) {
+                        root.css("left", -left);
+                        return false;
+                        }
+                    });
+                },
+
+                /**
+                 * @inner 将所选中的内容展示到菜单可视范围内
+                 * 
+                 */
+                auto: function auto(root, index) {
+                    var tabsLeft = parseFloat(root.css("left")); 
+                    var thisLi = root.find('[lay-id="' + index + '"]');
+                    if (!thisLi[0]) return;
+                    var thisLeft = thisLi.position().left; 
+
+                    if (thisLeft < -tabsLeft) {
+                        return root.css("left", -thisLeft);
+                    } 
+                    if (thisLeft + thisLi.outerWidth() >= root.outerWidth() - tabsLeft) {
+                        var subLeft = thisLeft + thisLi.outerWidth() - (root.outerWidth() - tabsLeft);
+                        root.children("li").each(function (i, item) {
+                        var li = $(item),
+                            left = li.position().left;
+                        if (left + tabsLeft > subLeft) {
+                            root.css("left", -left);
+                            return false;
+                        }
+                        });
+                    }
+                },
+
+                /**
+                 * @inner 将内容向左边移动一个可视化距离
+                 */
+                right: function right(root, index) {
+                    var tabsLeft = parseFloat(root.css("left")); 
+                    root.children("li").each(function (index, item) {
+                        var li = $(item),
+                        left = li.position().left;
+                        if (left + li.outerWidth() >= root.outerWidth() - tabsLeft) {
+                        root.css("left", -left);
+                        return false;
+                        }
+                    });
+                }
+            };
+
+            // 注册渲染器
+            layui.formplus.registerRenderer(
+                /**
+                 * 判断是否适用 “下拉多选” 渲染器
+                 *
+                 * @param {HTMLElement} formItem - 表单元素
+                 * @param {string} formType - 表单类型
+                 * @param {string} type - 组件类型
+                 * @returns {boolean} 是否匹配
+                 *
+                 * @description
+                 * 匹配规则：
+                 * 1. 只需要属性标记 lay-tag 为 MultiSelect
+                 */
+                function(formItem, formType, type){
+                    return formItem.getAttribute('lay-tag') == 'MultiSelect';
+                },
+                /**
+                 * 初始化多选下拉框组件（基于 input 模拟）
+                 * 
+                 * 功能：
+                 *  - 创建标签式多选 UI（复用 select-tree 样式）
+                 *  - 支持搜索、滚动、删除标签
+                 *  - 支持本地/远程数据源
+                 *  - 双向数据绑定 formProxy
+                 * 
+                 * @param {Object} item - 外层表单（未使用，可忽略）
+                 * @param {HTMLInputElement|HTMLSelectElement} formItem - 原始表单元素
+                 * @param {Object} formProxy - formplus 数据模型，用于内部操作
+                 */
+                function(item, formItem, formProxy){
+
+                    const CONST = layui.formplus.CONST;
+                    var $input = $(formItem);
+                    var $parent = $input.parent();
+                    var $root = $parent.parent();
+
+                    // ========== 【1. 配置解析】==========
+                    var attributeOptions = getElementAttributeOption(formItem);
+                    var defaultOptions = CONST.LAYUI_SELECT_TREE_OPTIONS;
+                    var mergedOptions = deepMergeByTemplate(defaultOptions, attributeOptions, ['where', 'headers','callback']);
+                    // 获取 lay-filter 属性值，用于事件命名空间
+                    var formFilter = getFilterNameOfFormItem.call(formProxy, formItem);
+
+                    /**
+                     * 数据源
+                     */
+                    var MultiData = mergedOptions.data;
+
+                    // ========== 【2. 初始数据设置】==========
+                    var valueArray = [];
+                    if(formItem.value){
+                        valueArray = getConvertValue.call(formProxy, formItem.value, 'array', formItem.name) || [];
+                    }
+                    formProxy.setData(formItem.name, valueArray);
+
+                    // ========== 【3. DOM 结构构建】==========
+                    var placeholder = $input.attr('placeholder') || '';
+
+                    // 隐藏当前的input表单元素,这个元素记录的应该是类似id的信息，前端展示的是名称信息,这两个是分开的dom
+                    // 区分当前保存值的class
+                    $input.addClass(CONST.CLASS_HIDE).addClass(CONST.CLASS_SELECT_TREE_VALUE);
+
+                    // 创建一个 * + name 的输入框,作为后面展示的输入框,单独将它拎出来方便后面绑定事件 （搜索用）
+                    var $nameDom = $(`<input type = "text" autocomplete="off" class="layui-input layui-unselect layui-input-name ${CONST.CLASS_SELECT_TREE_TITLE}"  name = "*${formItem.name}"  placeholder = "${placeholder}">`);
+                    
+                    // 创建标签容器
+                    var $labelDom = $(`
+                        <div class = "layui-input ${CONST.CLASS_SELECT_TREE_LABEL} ${CONST.CLASS_HIDE}">
+                        <div class = "${CONST.CLASS_LABEL_GROUP}">
+                            <div class="layui-icon layui-icon-search layui-label-tabs-control ${CONST.CLASS_LABEL_SEARCH}"></div>
+                            <div class="layui-icon layui-icon-prev layui-label-tabs-control ${CONST.CLASS_LABEL_PREV}"></div>
+                            <div class="layui-icon layui-icon-next layui-label-tabs-control ${CONST.CLASS_LABEL_NEXT}"></div>
+                            <div class="${CONST.CLASS_LABEL_TAB}">
+                            <ul class = "${CONST.CLASS_LABEL_TAB_TITLE}">
+                            </ul>
+                            </div>
+                        </div>
+                        </div>
+                    `);
+
+                    // 加入 DOM 中
+                    $parent.append($labelDom);
+
+                    // 加入DOM树中和下拉箭头
+                    $parent.append($nameDom).append('<i class="layui-edge"></i>');
+
+                    // dl dd节点模拟select下拉节点（dl > dd）
+                    var $dlDom = $('<dl class="layui-anim layui-anim-upbit" ></dl>');
+                    var $ddDom = $('<dd ></dd>');
+                    $dlDom.append($ddDom);
+                    $root.append($dlDom);
+
+                    // ========== 【4. 事件绑定】==========
+                    // --- 4.1 搜索输入框事件 ---
+
+                    // 原输入框 change 事件
+                    // 定义事件
+                    var eventKey = formItem.hasAttribute(CONST.LAYUI_LAZY) ? "blur" : "input propertychange";
+                    
+                    // 绑定事件
+                    layui.each(eventKey.split(" "), (k, eventName) => {
+                        formItem.addEventListener(eventName, function(){
+                            var value = this.value;
+                            var data = getConvertValue.call(formProxy, value, 'array' , formItem.name);
+                            formProxy.setData(formItem.name, data);
+                        })
+                    });
+
+                    // 输入框输入搜索事件
+                    $nameDom.on('input propertychange', function () {
+                        var keyword = this.value.trim();
+                        
+                        // 自动展开下拉
+                        if (!$root.hasClass(`${CONST.CLASS_SELECT_STATE_PREFIX}ed`) &&
+                            !$root.hasClass(`${CONST.CLASS_SELECT_STATE_PREFIX}up`)) {
+                            $nameDom.trigger('click');
+                        }
+                        
+                        // 执行搜索渲染
+                        if(keyword && keyword.trim() && MultiData){
+                            searchDl ($root, formItem, formProxy, MultiData, mergedOptions, keyword)
+                        }
+                    });
+
+                    // --- 4.2 标签容器交互 ---
+
+                    //  ul 元素
+                    var $ulDom = $labelDom.find(`.${layui.formplus.CONST.CLASS_LABEL_TAB_TITLE}`);
+                    
+                    // 绑定删除事件
+                    $ulDom.on('click', '.layui-icon-close', function(e){
+                        layui.stope(e);
+                        var $this = $(this);
+                        var layId = $this.attr('lay-id');
+                        var values = formProxy.getData(formItem.name);
+
+                        // 计算聚焦邻近项
+                        var nearId = '';
+                        if(values.length > 1){
+                            var index = values.indexOf(layId);
+                            var prevId = index > 0 ? values[index - 1] : '';
+                            var nextId = index !== -1 && index < values.length - 1 ? values[index + 1] : '';
+                            nearId = prevId || nextId
+                        }
+
+                        // 删除 DOM
+                        $this.parent().remove();
+
+                        // 调整位置
+                        if(nearId){
+                            rollPage.auto($ulDom, nearId);
+                        }
+                        
+                        // 更新数据
+                        // 1. 先复制数组（不修改原数组）
+                        var newValues = values.slice();
+                        // 2. 找到 layId 的索引并删除
+                        var index = newValues.indexOf(layId);
+                        if (index !== -1) {
+                            newValues.splice(index, 1); // 删除 1 个元素
+                        }
+
+                        formProxy.setData(formItem.name, newValues);
+                    });
+
+                    // 滚动控制
+                    $labelDom.on('click', `.${CONST.CLASS_LABEL_PREV}`, function(e){
+                        layui.stope(e);
+                        rollPage.left($ulDom);
+                    });
+
+                    $labelDom.on('click', `.${CONST.CLASS_LABEL_NEXT}`, function(e){
+                        layui.stope(e);
+                        rollPage.right($ulDom);
+                    });
+
+                    // 点击搜索图标：切换回搜索模式
+                    $labelDom.on('click', `.${CONST.CLASS_LABEL_SEARCH}`, function(e){
+                        layui.stope(e);
+                        // 隐藏 $labelDom
+                        if(!$labelDom.hasClass(CONST.CLASS_HIDE)){
+                            $labelDom.addClass(CONST.CLASS_HIDE)
+                        }
+                        // 显示 $nameDom
+                        $nameDom.removeClass(CONST.CLASS_HIDE).val('').focus();
+                    });
+            
+                    // --- 4.3 主容器点击：打开下拉面板 ---
+                    /**
+                     * 绑定事件 - 点击表单弹出下拉区域
+                     */
+                    $parent.on('click', function(e){
+                        // 点击parent节点调用方法展开树
+                        openSelectPanel($(e.target), formProxy, formItem, $root);
+                    });
+
+                    // --- 4.5 下拉项点击：切换选中状态 ---
+                    $root.on('click', 'dd', function(e){
+                        
+                        var $this = $(e.target);
+                        var id = $this.attr(LAY_VALUE);
+                        if (!id) return;
+
+                        // 获取当前的值
+                        var currentValues = formProxy.getData(formItem.name) || [];
+                        var index = currentValues.indexOf(id);
+                        
+                        if (index > -1) {
+                            currentValues.splice(index, 1);
+                        } else {
+                            currentValues.push(id);
+                        }
+                        // 过滤空值（仅当多选时）
+                        if (currentValues.length > 1) {
+                            currentValues = currentValues.filter(function(value) {
+                                return !!value; // 过滤掉空字符串 ""
+                            });
+                        } 
+
+                        formProxy.setData(formItem.name, currentValues);
+                        
+                    });
+
+                    // ========== 【5. 数据加载】==========
+                    if(mergedOptions.url) {
+                        var param = mergedOptions.where || {};
+                        $.ajax({
+                            url: mergedOptions.url,
+                            type: mergedOptions.type || 'GET',
+                            headers: mergedOptions.headers || {},
+                            data: mergedOptions.dataType !== 'json' ? param : JSON.stringify(param),
+                            contentType: mergedOptions.dataType === 'json' ? 'application/json' : 'application/x-www-form-urlencoded',
+                            success: (res) => {
+                                var code = res[mergedOptions.statusName || 'code'];
+                                var data = res[mergedOptions.dataName || 'data'];
+                                if (code === (mergedOptions.statusCode || 200) && layui.type(data) == 'array') {
+                                    MultiData = data;
+                                    // 渲染
+                                    renderDl(MultiData, mergedOptions, formItem, formProxy, $root, formProxy.getData(formItem.name));
+                                    // 同步一下当前的tree
+                                    doFixValue($root, formItem, formProxy,  formProxy.getData(formItem.name));
+                                    
+                                    if(mergedOptions.callback){
+                                        var evt = {
+                                            value: formItem.value,
+                                            oldValue: formItem.value,
+                                            data: data,
+                                            elem: formItem
+                                        }
+                                        formProxy.invokeServiceLocator(mergedOptions.callback, evt);
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        // 渲染
+                        renderDl(MultiData, mergedOptions, formItem, formProxy, $root, formProxy.getData(formItem.name))
+                        // 同步一下当前的tree
+                        doFixValue($root, formItem, formProxy, formProxy.getData(formItem.name));
+                    }
+
+                    // ========== 【6. 数据模型监听】==========
+
+                    /**
+                     * 添加监视事件: 在外部尝试修改 formProxy 模型中的值之前触发。
+                     * 这是确保数据一致性和进行值校验的关键环节。
+                     * 它负责：
+                     *  1. 校验新值 (evt.value) 是否存在于当前的 option 列表中。
+                     *  2. 如果值有效，则同步更新 DOM 状态 。
+                     *  3. 触发绑定的 lay-event 事件。
+                     *  4. 如果值无效，则中断赋值操作 (return false)，保证模型数据的合法性。
+                     */
+                    formProxy.beforeExecute(formFilter, function(evt){
+
+                        if(!doFixValue($root, formItem, formProxy, evt.value)){
+                            return false; // 阻止提交
+                        };
+                        // 改变选中的状态
+                        renderDl(MultiData, mergedOptions, formItem, formProxy, $root, evt.value )
+
+                        // 在数据和 DOM 状态同步成功后，触发绑定的 lay-event 事件
+                        var eventKey = formItem.getAttribute("lay-event");
+                        if(eventKey) {
+                            invokeLayEvent(formProxy, eventKey, evt);
+                        }
+                    });
+                }
+            );
+
+            /**
+             * 展开选择面板，控制下拉显隐状态，并绑定外部点击关闭事件
+             * 【模拟下拉列表的下拉显隐的原理】
+             * @param {jQuery|HTMLElement} ele - 当前触发元素（如 input）
+             * @param {jQuery|HTMLElement} othis - 可选，原始触发对象（未使用，保留兼容）
+             * @param {Object} formProxy - formplus 数据模型，用于内部操作
+             * @param {Object} formItem - 当前表单项配置对象
+             * @param {jQuery} $root - 当前表单项根节点 jQuery 对象
+             */
+            function openSelectPanel(ele, formProxy,formItem, $root){
+                // ========== 【常量区】==========
+                const CONST = layui.formplus.CONST;
+                const CLASS_PREFIX = CONST.CLASS_SELECT_STATE_PREFIX;
+                const CLASS_ACTIVE = CLASS_PREFIX + 'ed';
+
+                // ========== 【DOM 缓存】==========
+                const $container = ele.parents(`.${CLASS_PREFIX}`);
+
+                // 关闭其他展开的面板
+                $(`.${CLASS_PREFIX}`).not($container).removeClass(CLASS_ACTIVE);
+
+                // 切换当前状态
+                $container.toggleClass(CLASS_ACTIVE);
+
+                // 重置滚动条位置
+                $container.find('dl').scrollTop(0);
+
+                // 绑定点击外部关闭
+                formItem.removeClickOutsideEvent = lay.onClickOutside(
+                    $container[0],
+                    function(){
+                        hideSelectPanel($container, $root, formProxy,formItem);
+                    },
+                    {ignore: ele}
+                );
+            }
+
+            /**
+             * 隐藏下拉选择面板
+             * @param {jQuery} choose - 下拉容器（带前缀类的父级）
+             * @param {jQuery} $root - 当前表单项根节点 jQuery 对象
+             * @param {Object} formProxy - formplus 数据模型，用于内部操作
+             * @param {Object} formItem - 当前表单项配置对象
+             */
+            function hideSelectPanel (choose, $root, formProxy, formItem){
+                // ========== 【常量区】==========
+                const CONST = layui.formplus.CONST;
+                const CLASS_PREFIX = CONST.CLASS_SELECT_STATE_PREFIX;
+                const CLASS_ACTIVE = CLASS_PREFIX + 'ed';
+
+                // 隐藏面板
+                choose.removeClass(CLASS_ACTIVE);
+
+                // 解绑外部点击事件
+                formItem.removeClickOutsideEvent && formItem.removeClickOutsideEvent();
+
+                // 延迟执行值修正，避免立即取值时仍为旧状态
+                setTimeout(function(){
+                    const currentValue = formProxy.getData(formItem.name);
+                    doFixValue($root, formItem, formProxy, currentValue);
+                } , 200);
+            }
+
+            /**
+             * 确保输入为字符串并转义 CSS 选择器特殊字符
+             * @param {*} str - 待处理的任意类型值
+             * @returns {string} 转义后的安全字符串
+             */
+            function escapeSelector(str) {
+                // 1. 确保输入为字符串
+                str = str == null ? '' : String(str);
+                // 2. 手动转义 CSS 选择器中具有特殊含义的字符
+                //    使用字符类匹配，避免正则元字符问题
+                return str.replace(/([\\!"#$%&'()*+,.\/:;<=>?@\[\\\]^`{|}~])/g, '\\$1');
+            }
+
+            /**
+             * 转义字符串使其可用于正则表达式
+             * @param {string} string - 原始字符串
+             * @returns {string} 转义后的字符串
+             */
+            function escapeRegExp(string) {
+                return string.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
+            }
+
+            /**
+             * 根据搜索关键词过滤并高亮显示选项数据
+             * @param {jQuery} $root - 当前表单项根节点 jQuery 对象
+             * @param {Object} formItem - 当前表单项配置
+             * @param {Object} formProxy - formplus 数据模型，用于内部操作
+             * @param {Array<Object>} source - 原始数据源
+             * @param {Object} option - 配置项，包含 customName 映射字段
+             * @param {string} searchContent - 搜索关键词
+             */
+            function searchDl ($root, formItem, formProxy, source, option, searchContent){
+                var idKey = option.customName.id;
+                var titleKey = option.customName.title;
+                // 深拷贝数据（避免污染原始数据）
+                var tempData = cloneDeep(source); 
+                // 数据保存至hash表中,保证后面通过key查询信息比较方便
+                var _tempSortJson = {};
+                layui.each(tempData, function(key, value){
+                    var rawTitle = value[titleKey];
+                    var id = value[idKey];
+
+                    // 保存原始标题用于后续取值
+                    value[`*${titleKey}`] = rawTitle;
+
+                    // 初始化匹配计数
+                    _tempSortJson[id] = 1;
+
+                    // 高亮匹配文本
+                    value[titleKey] = String(rawTitle).replace(
+                        new RegExp(escapeRegExp(searchContent), "gim"),
+                        function (match) {
+                            _tempSortJson[id]++;
+                            return `<span style = 'color:red'>${match}</span>`;
+                        }
+                    );
+                });
+
+                // 按匹配次数排序（匹配越多越靠前）
+                tempData.sort((a, b) => _tempSortJson[b[idKey]] - _tempSortJson[a[idKey]]);
+                
+                // 渲染结果
+                renderDl(tempData, option, formItem, formProxy, $root, formProxy.getData(formItem.name)  )
+            }
+            
+            /**
+             * 渲染下拉列表 <dl>
+             * @param {Array<Object>} source - 过滤后的数据源
+             * @param {Object} option - 配置项
+             * @param {Object} formItem - 表单项配置
+             * @param {Object} formProxy - formplus 数据模型，用于内部操作
+             * @param {jQuery} $root - 当前表单项根节点 jQuery 对象
+             * @param {Array<string>} values - 当前选中的值数组
+             */
+            function renderDl(source, option, formItem, formProxy, $root, values){
+                // ========== 【常量区】==========
+                const CONST = layui.formplus.CONST;
+                const CLASS_THIS = CONST.CLASS_THIS;
+                const CLASS_DISABLED = CONST.CLASS_DISABLED;
+
+                const idKey = option.customName.id;
+                const titleKey = option.customName.title;
+
+                var arr = [];
+
+                if(source.length > 0){
+                    layui.each(source, function(key, value){
+                        var id = value[idKey];
+                        var title = value[titleKey];
+                        var rawTitle = value[`*${titleKey}`] || title;
+                        var isSelected = values.indexOf(id) > -1;
+                        var className = isSelected ? CLASS_THIS : '';
+                        arr.push(` <dd class = "${className}" ${LAY_VALUE}="${escapeSelector(id)}" ${LAY_TITLE}="${escapeSelector(rawTitle)}" >${title}</dd> `);
+                    })
+                } else {
+                    arr.push(`<dd ${LAY_VALUE}="" class="${CLASS_DISABLED}">没有选项</dd>`); 
+                }
+
+                var $dl = $root.find('dl').empty();
+                $dl.append($(arr.join('')));
+                
+                // 更新选中样式
+                selectedOption(values, $root);
+            }
+
+            /**
+             * 添加选中的样式
+             * @param {Array<string>} values - 当前选中的值列表
+             * @param {jQuery} $root - 当前表单项根节点 jQuery 对象
+             */
+            function selectedOption(values, $root){
+                // ========== 【常量区】==========
+                const CONST = layui.formplus.CONST;
+                const CLASS_THIS = CONST.CLASS_THIS;
+
+                var $dl = $root.find('dl');
+                $dl.find(`> .${CLASS_THIS}`).removeClass(CLASS_THIS);
+
+                // 改变选中的状态
+                var $items = $dl.find('dd');
+                $items.each(function () {
+                    var $item = $(this);
+                    var itemValue = $item.attr(LAY_VALUE);
+                    if (values.includes(itemValue)) {
+                        $item.addClass(CLASS_THIS);
+                    }
+                });
+
+            }
+
+            /**
+             * 执行表单元素上面的 lay-event 事件
+             *
+             * @param {*} formProxy formplus 数据模型，用于内部操作
+             * @param {string} eventKey 事件名称
+             * @param {*} evt 回调参数
+             */
+            function invokeLayEvent(formProxy, eventKey, evt){
+                // 查找并使用事件转换器(这里考虑多事件，所以要进行 string -> array<string>的转换)
+                var events = getConvertValue.call(formProxy, eventKey, 'array' ) || [String(eventKey)];
+                // 触发所有关联的事件
+                layui.each(events, (k, event) => {
+                formProxy.invokeServiceLocator(event, evt);
+                });
+            }
+
+            /**
+             * @function
+             * 获取转换后的值
+             * 
+             * @this component实例
+             * @param {*} value 待转换的值
+             * @param {string} returnType 指定转换的类型
+             * @param {string} name 保留的name
+             * @returns {String|null} 返回指定的类型的数据
+             */
+            function getConvertValue(value, returnType, name){
+                var converterInst = this.findConverter(layui.type(value), returnType, name);
+                if (converterInst instanceof layui.formplus.converter) {
+                    return converterInst.convert.call(this, value);
+                }
+                return null;
+            }
+
+            /**
+             * @function
+             * 获取/生成表单元素的 lay-filter 属性值
+             *
+             * @this component实例
+             * @param {HTMLElement} formItem 表单元素
+             * @returns {String} lay-filter 属性值
+             */
+            function getFilterNameOfFormItem(formItem){
+
+                // 优化：使用 instanceof 进行更精确的类型检查
+                if (!formItem || !(formItem instanceof HTMLElement)) {
+                    return null;
+                }
+
+                // 尝试获取表单元素的 lay-filter 属性值
+                var filter = formItem.getAttribute(layui.formplus.CONST.LAYUI_FILTER);
+
+                // 没有获取到就自动生成一个值(表单的唯一id和表单元素的name属性进行拼接，这两个值必然存在的)
+                if(!filter) {
+                    filter = `${this.config.id}-${formItem.name}`;
+                    // 设置属性值
+                    if(formItem.type == 'checkbox' ||formItem.type == 'radio') {
+                        this.config.elem.find(`[name="${escapeSelector(formItem.name)}"]`).attr(layui.formplus.CONST.LAYUI_FILTER, filter);
+                    } else {
+                        formItem.setAttribute(layui.formplus.CONST.LAYUI_FILTER, filter);
+                    }
+                }
+
+                return filter;
+            }
+
+            /**
+             * @function
+             * 从dom属性中获取配置项参数(规定，禁止使用转义符号\来转义)
+             * 
+             * @param {HTMLElement} formItem 表单元素
+             * @param {String} attributeName 属性名称
+             * @param {Object} defaultValue 缺省返回值
+             * @returns {Object} 配置项参数
+             */
+            function getElementAttributeOption(formItem, attributeName = layui.formplus.CONST.LAYUI_OPTIONS, defaultValue = {}){
+
+                /**
+                 * 入参校验
+                 */
+                if (!(formItem instanceof HTMLElement)) {
+                    console.warn("传入的 formItem 不是一个有效的 HTMLElement");
+                    return defaultValue;
+                }
+
+                var optionsAttr = formItem.getAttribute(attributeName);
+                if (!optionsAttr) {
+                    /**
+                     * 属性不存在，返回空对象
+                     */
+                    return defaultValue;
+                }
+                try {
+                    /**
+                     * 属性值处理:
+                     * ┌───────────────────┐
+                     * │ 单引号替换成双引号   │
+                     * └──────┬────────────┘
+                     *        ↓
+                     * ┌─────────────────────────────┐
+                     * │ 处理转义错误（如果用户写了\"）  │
+                     * └──────┬──────────────────────┘
+                     *        ↓
+                     * ┌────────────────┐
+                     * │ 处理多余的反斜杠  │
+                     * └──────┬─────────┘
+                     *        ↓
+                     * ┌───────────────────┐
+                     * │ 去掉前后的空格      │
+                     * └───────────────────┘
+                     *
+                     */
+                    var jsonStr = optionsAttr.replace(/'/g, '"').replace(/\\"/g, '"').replace(/\\?"/g, '"').trim();
+                    if (!jsonStr) {
+                        /**
+                         * 空字符串返回空对象
+                         */
+                        return defaultValue;
+                    }
+                    return JSON.parse(jsonStr); // 解析为对象
+                } catch (e) {
+                    console.warn(`解析属性 ${attributeName} 失败，非法 JSON 配置：`, optionsAttr);
+                    return defaultValue; // 出错时返回空对象，不影响整体流程
+                }
+            }
+
+            /**
+             * @function
+             * 合并配置项（模板模式 + 开放字段支持）
+             *
+             * @param {Object} target 默认值对象（模板）
+             * @param {Object} source 用户配置对象
+             * @param {Array|Object} [options] 可选配置
+             *  - Array: 开放字段名数组，如 ['where', 'headers']
+             *  - Object: { openFields: ['where'] }
+             * @returns {Object} 合并后的新对象
+             * @description
+             * 深度合并两个对象，只保留默认值中已有的字段（模板模式）。
+             * 用户配置中新增的字段不会被合并进来，除非在 openFields 中声明。
+             * 支持嵌套对象、数组、Date、RegExp 等复杂类型。
+             * 使用 cloneDeep 实现深拷贝，确保不污染原始对象。
+             * @example
+             * deepMergeByTemplate(defaults, user, ['where']);
+             * deepMergeByTemplate(defaults, user, { openFields: ['where', 'headers'] });
+             */
+            function deepMergeByTemplate(target, source, options) {
+                // 参数预处理：提取 openFields
+                var openFields = [];
+                if(layui.type(options) == 'array'){
+                    openFields = options;
+                } else if (options && layui.type(options) === 'object') {
+                    openFields = options.openFields || [];
+                }
+
+                // 如果 target 不是对象或为 null，直接返回 target（终止递归）
+                if (target === null || layui.type(target) !== 'object') {
+                    return target;
+                }
+
+                // 如果 source 不是对象或为 null，说明用户未提供有效配置，返回默认值
+                if (source === null || layui.type(source) !== 'object') {
+                    return target;
+                }
+
+                // 先对默认值对象进行深拷贝，防止污染原始对象
+                var merged = cloneDeep(target);
+
+                // 获取默认值对象的所有键（包括 Symbol 类型），用于以默认值为模板进行合并
+                var keys = Reflect.ownKeys(target);
+
+                // 遍历默认值中的所有字段
+                layui.each(keys, (i, key) => {
+                    var targetValue = target[key];
+                    var sourceValue = Object.prototype.hasOwnProperty.call(source, key) ? source[key] : undefined;
+
+                    // 如果默认值中的字段是函数，直接保留默认值函数，不被覆盖
+                    if(layui.type(targetValue) === 'function'){
+                        merged[key] = targetValue;
+                    } else {
+                        // 如果默认值中的字段是对象（且非 null），尝试递归合并
+                        if(layui.type(targetValue) === 'object' && targetValue !== null){
+                            // 如果用户配置中也存在该字段，并且也是对象，则递归合并
+                            if(layui.type(sourceValue) === 'object' && sourceValue !== null){
+                                merged[key] = deepMergeByTemplate(targetValue, sourceValue);
+                            }
+                        // 否则保留默认值对象（已通过 cloneDeep 拷贝，无需处理）
+                        } else if(sourceValue !== undefined){
+                            // 如果默认值中的字段是基础类型（如 string, number, boolean 等）
+                            // 并且用户配置中存在该字段，则用深拷贝覆盖默认值
+                            merged[key] = cloneDeep(sourceValue);
+                        }
+                    }
+                });
+
+                // 处理开放字段（用户配置中有，但默认值中没有的字段）
+                if(openFields.length > 0){
+                    var sourceKeys = Reflect.ownKeys(source);
+                    layui.each(sourceKeys, function(i, key) {
+                        // 如果是开放字段，且 source 中有值，则直接深拷贝挂载
+                        if (openFields.includes(key) && Object.prototype.hasOwnProperty.call(source, key)) {
+                            merged[key] = cloneDeep(source[key]);
+                        }
+                    });
+                }
+
+                // 返回合并后的新对象
+                return merged;
+            }
+
+            /**
+             * @function
+             * 深拷贝
+             *
+             * @param {*} o 待深拷贝的对象
+             * @returns {*} 深拷贝后新产生的对象
+             */
+            function cloneDeep(o){
+                var res;
+                switch (typeof o) {
+                case "undefined":
+                    break;
+                case "string":
+                    res = o + "";
+                    break;
+                case "boolean":
+                    res = !!o;
+                    break;
+                case "number":
+                    res = o + 0;
+                    break;
+                case "object":
+                    if (o == null) {
+                    res = null;
+                    } else {
+                    if (layui.type(o) == 'array') {
+                        res = [];
+                        layui.each(o, (k,v) => {
+                        res.push(cloneDeep(v))
+                        });
+                    } else if (layui.type(o) == 'date') {
+                        res = new Date();
+                        res.setTime(o.getTime());
+                    } else if (layui.type(o) == 'object') {
+                        res = {};
+                        layui.each(o, (k,v) => {
+                        res[k] = cloneDeep(v);
+                        });
+                    } else if (layui.type(o) == 'regexp') {
+                        res = new RegExp(o);
+                    } else {
+                        res = o;
+                    }
+                    }
+                    break;
+                default:
+                    res = o;
+                    break;
+                }
+                return res;
+            }
+
+            /**
+             * 同步并更新选择器的显示值与内部状态
+             *
+             * @param {jQuery} $parent 选择器根容器
+             * @param {HTMLElement} formItem 表单元素
+             * @param {Object} formProxy formplus 数据模型，用于内部操作
+             * @param {Array<string>} multiValues 选中的值数组
+             * @returns {boolean} 是否允许更新
+             */
+            function doFixValue($parent, formItem, formProxy, multiValues){
+
+                const CONST = layui.formplus.CONST;
+                
+                // ========== 【校验阶段】==========
+                // 定义需要展示的值
+                var newValues = [];
+                // 定义返回值
+                var isValid = true;
+
+                // 空值特殊处理
+                if(multiValues.length === 1 && multiValues[0] === ''){
+                    newValues.push("");
+                } else {
+                    layui.each(multiValues, function(key, value){
+                        if (value === '') {
+                            isValid = false;
+                            return true; // 格式错误：不允许空
+                        }
+                        var $node = $parent.find(`dd[lay-value="${escapeSelector(value)}"]`);
+                        if(!$node.length) {
+                            isValid = false;
+                            return true; // 节点不存在
+                        }
+                        newValues.push($node.attr(LAY_TITLE));
+                    })
+                }
+                if(!isValid){
+                    return false;
+                }
+
+                var $labelDom = $parent.find(`.${CONST.CLASS_SELECT_TREE_LABEL}`);
+                var $nameDom = $parent.find(`.${CONST.CLASS_SELECT_TREE_TITLE}`);
+                // ========== 【获取显示文本】==========
+                var finalContent = getConvertValue.call(formProxy, newValues, 'string', `*${formItem.name}` );
+                var setValue = getConvertValue.call(formProxy, multiValues, 'string', formItem.name);
+                formItem.value = setValue;
+
+                // ========== 【更新 UI】==========
+                $nameDom.val(finalContent || '');
+
+                if(!finalContent) {
+                    // 显示 nameDom，隐藏 labelDom
+                    if(!$labelDom.hasClass(CONST.CLASS_HIDE)){
+                        $labelDom.addClass(CONST.CLASS_HIDE)
+                    }
+                    $nameDom.removeClass(CONST.CLASS_HIDE)
+                } else {
+                    // 显示 labelDom，隐藏 nameDom
+                    if(!$nameDom.hasClass(CONST.CLASS_HIDE)){
+                        $nameDom.addClass(CONST.CLASS_HIDE)
+                    }
+                    $labelDom.removeClass(CONST.CLASS_HIDE)
+                    
+                    // ========== 【同步标签列表】==========
+                    var valuesSet = [];
+                    var existingLis = $labelDom.get(0).querySelectorAll('li');
+                    // 获取下面的 li 标签集合
+                    existingLis.forEach((li) => {
+                        var layId = li.getAttribute('lay-id');
+                        valuesSet.push(layId);
+                    });
+                    // 判断与原值是否相等
+                    if(!formProxy.isStringOrStringArrayEqual(multiValues, valuesSet)){
+                        // 
+                        formProxy.syncLiElements($labelDom.find(`.${CONST.CLASS_LABEL_TAB_TITLE}`), existingLis, valuesSet, multiValues, newValues);
+                    }
+                }
+
+                return true;
+            }
+
+            // 表单渲染（启用 formplus）
+            layui.formplus.render(null, 'formplus-form-demo1');
+
+            layui.form.on('submit(formplus-bth-demo1)', function(obj){
+                var field = obj.field;
+                layui.layer.msg(JSON.stringify(field), {icon: 6});
+            });
+
+            $('#formplus-bth-demo1-val').on('click', function(){
+                // 使用formplus修改表单
+                var field = layui.formplus.val('formplus-form-demo1');
+                layui.layer.msg(JSON.stringify(field), {icon: 6});
+            });
+
+        });
+    </script>
+    </body>
+</html>
+
+

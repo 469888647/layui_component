@@ -20,9 +20,9 @@ const LAYER_CONFIG = {
         name: '表单扩展',
         url: './html/formPlus2.html',
     },
-    formPlusTest: {
-        name: '表单测试',
-        url: './html/formPlus3.html',
+    multiSelect: {
+        name: '下拉多选项',
+        url: './html/multiSelect.html',
     },
     colorthemeExp: {
         name: '颜色主题示例',

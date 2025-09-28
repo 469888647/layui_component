@@ -936,7 +936,7 @@
                 </div>
                 <div class="layui-form-item">
                     <div class="layui-input-inline">
-                        <div class = "layui-water-ripples-container" lay-options = "{'type':'out','trigger': 'always', 'color': '#ff0000'}">
+                        <div class = "layui-water-ripples-container" lay-options = "{&#39;type&#39;:&#39;out&#39;,&#39;trigger&#39;: &#39;always&#39;, &#39;color&#39;: &#39;#ff0000&#39;}">
                             <button class="layui-btn layui-btn-normal" id="formplus-bth-demo1-change">赋值</button>
                         </div>
                     </div>
@@ -1238,12 +1238,14 @@
                                 <col >
                                 <col >
                                 <col >
+                                <col >
                             </colgroup>
                             <thead>
                                 <tr>
                                     <th>方法</th>
                                     <th>推荐度</th>
                                     <th>解耦性</th>
+                                    <th>触发时机</th>
                                     <th>核心优势</th>
                                 </tr> 
                             </thead>
@@ -1252,12 +1254,14 @@
                                     <td><code>formplus.on</code></td>
                                     <td style="color: #FF9800;">可用</td>
                                     <td>中</td>
+                                    <td>赋值结束后</td>
                                     <td>快速绑定，适合简单联动</td>
                                 </tr>
                                 <tr>
                                     <td><code><code><a href="#formplus-event-2">formplus.registerHandler</a></code></code></td>
                                     <td style="color: #4CAF50;">推荐</td>
                                     <td>高</td>
+                                    <td>赋值前(所以禁止在该回调里面调用 <code>formplus.val</code> 、<code>formplus.getValue</code>)</td>
                                     <td>逻辑复用、动态控制、便于维护和测试</td>
                                 </tr>
                             </tbody>
@@ -1326,7 +1330,7 @@
                 </div>
                 <div class="layui-form-item">
                     <div class="layui-input-inline">
-                        <div class = "layui-water-ripples-container" lay-options = "{'type':'out','trigger': 'always', 'color': '#ff0000'}">
+                        <div class = "layui-water-ripples-container" lay-options = "{&#39;type&#39;:&#39;out&#39;,&#39;trigger&#39;: &#39;always&#39;, &#39;color&#39;: &#39;#ff0000&#39;}">
                             <button class="layui-btn layui-btn-normal" id="formplus-bth-demo2-change">赋值</button>
                         </div>
                     </div>
@@ -1578,7 +1582,7 @@
                             <div class="docs-icon-name">可以通过 <code>option</code> 修改配置项</div>
                         </div>
                         <div class = "docs-list-area">
-                            <div id = "formplus-wave-bth3" class = "layui-water-ripples-container" lay-options = "{'type':'out','trigger': 'always', 'color': '#ff0000'}">
+                            <div id = "formplus-wave-bth3" class = "layui-water-ripples-container" lay-options = "{&#39;type&#39;:&#39;out&#39;,&#39;trigger&#39;: &#39;always&#39;, &#39;color&#39;: &#39;#ff0000&#39;}">
                                 <button class="layui-btn" >闪烁</button>
                             </div>
                             <div class="docs-icon-name">可以通过 <code>lay-options</code> 修改配置项</div>
@@ -2044,7 +2048,7 @@ layui.formplus.registerConverter('demoForm',
                         <div class="layui-input-block">
                             <div class="layui-unselect layui-form-select">
                                 <div class="layui-select-title"  >
-                                    <input type="text" class="layui-input" autocomplete="false" placeholder="请选择" name = "tree1" lay-options = "{'url':'../plugin/json/selecttree.json','customName': { 'title':'cityName' }}" lay-filter = "selectTree-demo01" />
+                                    <input type="text" class="layui-input" autocomplete="false" placeholder="请选择" name = "tree1" lay-options = "{&#39;url&#39;:&#39;../plugin/json/selecttree.json&#39;,&#39;customName&#39;: { &#39;title&#39;:&#39;cityName&#39; }}" lay-filter = "selectTree-demo01" />
                                 </div>
                             </div>
                         </div>
@@ -2058,7 +2062,7 @@ layui.formplus.registerConverter('demoForm',
                         <div class="layui-input-block" style="width: 300px;">
                             <div class="layui-unselect layui-form-select">
                                 <div class="layui-select-title"  >
-                                    <input type="text" class="layui-input" autocomplete="false" placeholder="请选择" name = "tree2" lay-options = "{'id':'selectTree-demo02','checkbox':true,'data':[],'customName': { 'title':'cityName' },'showCheckbox': true, 'label': true }" lay-filter = "selectTree-demo02" />
+                                    <input type="text" class="layui-input" autocomplete="false" placeholder="请选择" name = "tree2" lay-options = "{&#39;id&#39;:&#39;selectTree-demo02&#39;,&#39;checkbox&#39;:true,&#39;data&#39;:[],&#39;customName&#39;: { &#39;title&#39;:&#39;cityName&#39; },&#39;showCheckbox&#39;: true, &#39;label&#39;: true }" lay-filter = "selectTree-demo02" />
                                 </div>
                             </div>
                         </div>
@@ -2148,7 +2152,7 @@ layui.formplus.registerConverter('demoForm',
                         <div class="layui-input-block">
                             <div class="layui-unselect layui-form-select">
                                 <div class="layui-select-title"  >
-                                    <input type="text" class="layui-input" autocomplete="false" placeholder="请选择" name = "tree3" lay-options = "{'url':'../plugin/json/selecttree.json','customName': { 'title':'cityName' },'showCheckbox': true,'checkbox':true}" lay-filter = "selectTree-demo03" />
+                                    <input type="text" class="layui-input" autocomplete="false" placeholder="请选择" name = "tree3" lay-options = "{&#39;url&#39;:&#39;../plugin/json/selecttree.json&#39;,&#39;customName&#39;: { &#39;title&#39;:&#39;cityName&#39; },&#39;showCheckbox&#39;: true,&#39;checkbox&#39;:true}" lay-filter = "selectTree-demo03" />
                                 </div>
                             </div>
                         </div>
@@ -2162,7 +2166,7 @@ layui.formplus.registerConverter('demoForm',
                         <div class="layui-input-block">
                             <div class="layui-unselect layui-form-select">
                                 <div class="layui-select-title"  >
-                                    <input type="text" class="layui-input" autocomplete="false" placeholder="请选择" name = "tree4" lay-options = "{'url':'../plugin/json/selecttree.json','customName': { 'title':'cityName' },'showCheckbox': true,'checkbox':true, 'clearOnFocus': true}" lay-filter = "selectTree-demo04" />
+                                    <input type="text" class="layui-input" autocomplete="false" placeholder="请选择" name = "tree4" lay-options = "{&#39;url&#39;:&#39;../plugin/json/selecttree.json&#39;,&#39;customName&#39;: { &#39;title&#39;:&#39;cityName&#39; },&#39;showCheckbox&#39;: true,&#39;checkbox&#39;:true, &#39;clearOnFocus&#39;: true}" lay-filter = "selectTree-demo04" />
                                 </div>
                             </div>
                         </div>
@@ -2392,7 +2396,7 @@ layui.formplus.registerConverter('demoForm',
                     <div class="layui-inline">
                         <label class="layui-form-label">参数设置</label>
                         <div class="layui-input-block">
-                            <input type="text" name="date3" laydate lay-options = '{"format":"yyyy-MM-dd HH:mm:ss","type":"datetime","value":"2024-01-01 00:00:00"}' autocomplete="off" readonly="" class="layui-input" >
+                            <input type="text" name="date3" laydate lay-options = "{&#39;format&#39;:&#39;yyyy-MM-dd HH:mm:ss&#39;,&#39;type&#39;:&#39;datetime&#39;,&#39;value&#39;:&#39;2024-01-01 00:00:00&#39;}" autocomplete="off" readonly="" class="layui-input" >
                         </div>
                     </div>
                 </div>
@@ -2499,7 +2503,7 @@ layui.formplus.registerConverter('demoForm',
                     <div class="layui-inline">
                         <label class="layui-form-label">普通日期</label>
                         <div class="layui-input-block">
-                            <input type="text" name="date" id = "formplus-form-demo9-date" laydate autocomplete="off" readonly="" class="layui-input" lay-options = '{"theme":"lunar"}' />
+                            <input type="text" name="date" id = "formplus-form-demo9-date" laydate autocomplete="off" readonly="" class="layui-input" lay-options = "{&#39;theme&#39;:&#39;lunar&#39;}" />
                         </div>
                     </div>
                 </div>

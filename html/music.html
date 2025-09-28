@@ -267,7 +267,7 @@
                 <div class="layui-form-item">
                     <label class="layui-form-label">选择声效</label>
                     <div class="layui-input-inline">
-                        <select name="effect">
+                        <select name="effect" lay-event="effect">
                             <option value="none">原始</option>
                             <option value="delay">混响</option>
                             <option value="panner">立体声</option>
@@ -277,7 +277,7 @@
                 <div class="layui-form-item" pane="">
                     <label class="layui-form-label">播放倍速</label>
                     <div class="layui-input-block">
-                        <input type="radio" name="speed" value="0.5" title="x0.5" />
+                        <input type="radio" name="speed" value="0.5" title="x0.5" lay-event="speed" />
                         <input type="radio" name="speed" value="0.8" title="x0.8" />
                         <input type="radio" name="speed" value="1" title="x1" />
                         <input type="radio" name="speed" value="1.2" title="x1.2" />
@@ -288,7 +288,7 @@
                 <div class="layui-form-item">
                     <label class="layui-form-label">循环播放</label>
                     <div class="layui-input-block">
-                      <input type="checkbox" name="loop" lay-skin="switch" lay-text="ON|OFF">
+                      <input type="checkbox" name="loop" lay-skin="switch" lay-event="loop" lay-text="ON|OFF">
                     </div>
                 </div>
                 <div class="layui-form-item">
@@ -338,17 +338,20 @@
                 },
             });
             // 表单渲染
-            layui.form.render(null, 'layui-music-formplus-demo2', true);
-            // 添加监听事件
-            layui.formplus.on('layui-music-formplus-demo2','effect', function(value){
-                musicInst.changeSoundEffect(value);
+            layui.formplus.render(null, 'layui-music-formplus-demo2');
+
+            layui.formplus.registerHandler('effect', function(evt){
+                musicInst.changeSoundEffect(evt.value);
             });
-            layui.formplus.on('layui-music-formplus-demo2','speed', function(value){
-                musicInst.changePlaySpeed(value);
+
+            layui.formplus.registerHandler('speed', function(evt){
+                musicInst.changePlaySpeed(evt.value);
             });
-            layui.formplus.on('layui-music-formplus-demo2','loop', function(value){
-                musicInst.switchLoop(value);
+
+            layui.formplus.registerHandler('loop', function(evt){
+                musicInst.switchLoop(evt.value);
             });
+            
             // 表单赋值
             layui.formplus.val('layui-music-formplus-demo2', {
                 effect: musicInst.soundEffect,

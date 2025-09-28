@@ -1,45 +1,4 @@
-/**
- * @function 表单增强
- * @since v0.0.1
- * @author Malphite
- * @desc
- *
- *  <p>在原有的{@link layui.form.render} 表单刷新渲染方法的前提下,在这个过程中添加更多的渲染机会,实现更多的需求功能</p>
- *  <p>简单原理:</p>
- *  <ul>
- *    <li>使用代理模式替换原有的方法,并在此方法之前和方法之后进行处理;其好处是,没有新增方法,可以降低学习成本</li>
- *    <li>额外使用一个js的object来映射表单,可以通过这个对象来间接控制表单</li>
- *  </ul>
- * 
- * 
- * 记录一下，初始化的变量定义值
- * 
- * 1. input(nomal) - input  string                output string
- * 2. selectTree -   input  string/array<string>  output string
- * 3. data         - input  string                output string
- * 4. checkbox     - input  array<string>         output string
- * 5. radio        - input  string                output string
- * 6. select       - input  string                output string
- * 7. switch       - input  boolean               output boolean
- * 
- * 新增converter
- *    renderer
- *    Proxy
- *    rollback
- *    onsync
- * 
- * 
- * TODO 数组型数据由于封装or对象的原因，新旧值始终不一致，始终触发change,出于性能考虑，不特殊判断了
- * 暂时不能解决的问题集合：
- * 同步问题: 
- *    在select 组件开启lay-serach功能后,如果在选择一个选项后，然后手动删除输入框里面的值:
- *      - 如果删到一半，输入框里面还有内容，此时点击其他地方取消下拉，select 会恢复原来的选项，这没有任何问题
- *      - 如果删完，输入框里面是空字符串 select 会将值设置为空字符串选项(如果有这一项)，这一步纯js实现，不会触发任何回调，因此会造成数据同步问题
- *    在 enableComplate 中的 blur 监听事件，在输入框失去焦点时又再次将数据进行同步就是为了避免这种情况
- *    但是在不启用这个功能的情况下，此bug依然存在。fromplus不会去修改 form的任何逻辑，所有取值时还是推荐使用 form的取值
- * 
- * 
- */
+
 ("use strict");
 layui.disuse('formplus');
 layui.define(["jquery", "lay", "layer", "form", "component"], function (exports) {
@@ -75,14 +34,14 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
    * @constant
    * form表单中过滤表单项的属性名
    * @type {string}
-   */  
+   */
   const LAYUI_FILTER = "lay-filter";
 
   /**
    * @constant
    * 标记form表单的样式名称
    * @type {string}
-   */  
+   */
   const CLASS_FORM = "layui-form";
 
   /**
@@ -94,7 +53,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
    *   <li>不设置这个属性 input采用 input onporpertychange 事件监听</li>
    *   <li>设置这个属性值 input采用 onbulr 事件监听</li>
    * </ul>
-   */  
+   */
   const LAYUI_LAZY = "lay-lazy";
 
   /**
@@ -206,6 +165,55 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
   /**
    * @constant
+   * 下拉树组件中标记 LABEL 的样式展示名称
+   * @type {string}
+   */
+  const CLASS_SELECT_TREE_LABEL = "layui-select-tree-label";
+
+  /**
+   * @constant
+   * 下拉树组件中标记 LABEL 外层聚合 DIV 的样式展示名称
+   * @type {string}
+   */
+  const CLASS_LABEL_GROUP = "layui-label-group";
+
+  /**
+   * @constant
+   * 下拉树组件中标记 LABEL 搜索的 DIV 样式展示名称
+   * @type {string}
+   */
+  const CLASS_LABEL_SEARCH = "layui-label-search";
+
+  /**
+   * @constant
+   * 下拉树组件中标记 LABEL 向左滚动的 DIV 样式展示名称
+   * @type {string}
+   */
+  const CLASS_LABEL_PREV = "layui-label-prev";
+
+  /**
+   * @constant
+   * 下拉树组件中标记 LABEL 向右滚动的 DIV 样式展示名称
+   * @type {string}
+   */
+  const CLASS_LABEL_NEXT = "layui-label-next";
+
+  /**
+   * @constant
+   * 下拉树组件中标记 LABEL 滚动区域外层的 DIV 样式展示名称
+   * @type {string}
+   */
+  const CLASS_LABEL_TAB = "layui-label-tab";
+
+  /**
+   * @constant
+   * 下拉树组件中标记 LABEL 滚动区域内层的 UL 样式展示名称
+   * @type {string}
+   */
+  const CLASS_LABEL_TAB_TITLE = "layui-label-tab-title";
+
+  /**
+   * @constant
    * 多个值之间用于拼接的字符
    * @type {string}
    */
@@ -224,10 +232,11 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
    * @property {string} dataName - AJAX 异步响应体名
    * @property {string} id - 对应 layu.tree 实例的ID
    * @property {Array} data - 对应 layu.tree 实例的数据源
-   * @property {boolean} showCheckbox - 是否启用复选模式 
-   * @property {boolean} checkbox - 复选模式下，是否在选择后关闭下拉框 
-   * @property {boolean} onlyIconControl - 对应 layu.tree 实例的配置项 - 节点只用来触发点击事件 
+   * @property {boolean} showCheckbox - 是否启用复选模式
+   * @property {boolean} checkbox - 复选模式下，是否在选择后关闭下拉框
+   * @property {boolean} onlyIconControl - 对应 layu.tree 实例的配置项 - 节点只用来触发点击事件
    * @property {*} customName - 对应 layu.tree 实例的配置项 - 自定义 data 数据源中常用的字段名称
+   * @property {boolean} label - 复选模式是否打开label标签风格
    */
 
   /**
@@ -298,30 +307,23 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
     data: [],
     /**
      * @inner
-     * 是否启用复选模式 
+     * 是否启用复选模式
      * @type {boolean}
-     * @description 
+     * @description
      * 注意与 layui.tree 中同名属性区分
      */
     showCheckbox: false,
     /**
      * @inner
-     * 复选模式下，是否在选择后关闭下拉框 
+     * 复选模式下，是否在选择后关闭下拉框
      * @type {boolean}
-     * @description 
+     * @description
      * 注意与 layui.tree 中同名属性区分
      */
     checkbox: false,
-
     /**
      * @inner
-     * 复选模式下，是否在获取到焦点后清空输入框 
-     * @type {boolean}
-     */
-    clearOnFocus: false,
-    /**
-     * @inner
-     * 对应 layu.tree 实例的配置项 - 节点只用来触发点击事件 
+     * 对应 layu.tree 实例的配置项 - 节点只用来触发点击事件
      * @type {boolean}
      */
     onlyIconControl: true,
@@ -336,36 +338,159 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
       children: 'children',
       parentid: 'parentid',
     },
+
+    /**
+     * @inner
+     * 复选模式是否打开label标签风格
+     * @type {boolean}
+     */
+    label: true,
   };
 
 
   /* 二、变量定义 */
 
   /**
+   * @namespace rollPage
+   * @private
+   * @desc
+   * > 实现选项卡定位逻辑
+   * > 这里的逻辑是完全照搬layuiAdmin里面的
+   * @type {{auto: ((function(*, *): (undefined|*))|*), left: rollPage.left, right: rollPage.right}}
+   */
+  let rollPage = {
+    /**
+     * @inner 将内容向右边移动一个可视化距离
+     * @param {*} root 需要传入 ul 标签对应的 jq对象
+     * @deprecated
+     * > root.outerWidth()  可视化距离
+     *
+     *
+     * > prefLeft 下一步还能藏多远的距离，如果是正数说明不太够了，将第一项 left=0 的都要抽出来。
+     */
+    left: function left(root, index) {
+      // 1.首先获取到 菜单条  它距离容器左侧的距离
+      var tabsLeft = parseFloat(root.css("left"));
+      /**
+       * 2.判断这个距离tabsLeft的值(这个值只能是小于等于00)
+       *  情况一、这个值是等于0的，说明菜单条的左侧已经已经不能再向右边移动了。直接返回，不做改变
+       * (仅仅使用  !tabsLeft  可能是 ''  或者 null  如果是 == 0 也不行 '' == 0 也是true
+       *  所以满足 !tabsLeft 和  <= 0 两种条件的就只有 数字 0 了)
+       *  情况二、这个值小于0
+       */
+      if (!tabsLeft && tabsLeft <= 0) return;
+      /**
+       * 3.计算需要移动的距离
+       *  到此 tabsLeft必然小于0 ， root.outerWidth()菜单可视宽度是大于0 的
+       *  -(tabsLeft + root.outerWidth())    ==>  - -tabsLeft  - root.outerWidth();
+       *  - -tabsLeft 是菜单条超过左侧的距离
+       *  那么prefLeft的实际意义是  菜单条 向右移动一个 菜单可视宽度，此时  菜单条和容器左侧的距离
+       *
+       *
+       *
+       *  prefLeft：首先使用菜单可视宽度(root.outerWidth())加上tabsLeft,得到移动后，原来展示的信息可保留的最大距离
+       *    ( 相当于可视距离减去移动被替换的距离，得到剩下可保留的原来的最大距离 )
+       *    因为这个tabsLeft必然小于0，所以最后的结果必然小于 root.outerWidth()
+       *    情况一、如果这个距离大于0等于0，你左边超出的部分，菜单可视宽度完全可以展示出来，说明只需要把左边超出的部分移动展示出来。
+       *    情况二、如果这个距离小于0，说明你左边超出的部分，要想一次展示出来，整个菜单可视距离都利用上还不够，只能展示一部分。
+       */
+      var prefLeft = -(tabsLeft + root.outerWidth());
+      // if (prefLeft >= 0) return root.css("left", 0);
+      /**
+       * 现在假设 强行将菜单的left设置为了0，菜单的左侧就对齐了，那么右侧会超出来一大截，超出的距离就是 prefLeft的等值
+       * 此时
+       * 依次遍历所有的li标签  它们left值第一个是0 后面慢慢增大
+       * 当left值增加到等于或者超过 ‘prefLeft的等值’ 时，此时如果这个点处在菜单可视化左侧的0点，可以认为这样就刚刚好向右移了一个可视化距离
+       *       a                b
+       * |__________________|_________|   如果想求a比b长多少，可以将两个线段重合起来比较
+       *               a-b
+       * |___________|______|
+       */
+      root.children("li").each(function (index, item) {
+        var li = $(item),
+          left = li.position().left;
+        if (left >= prefLeft) {
+          root.css("left", -left);
+          return false;
+        }
+      });
+    },
+
+    /**
+     * @inner 将所选中的内容展示到菜单可视范围内
+     * @param {*} root 需要传入{@linkplain $tabGroup 选项卡组的jq对象}
+     * @param {*} index 弹出层在选项卡组中的编号({@linkplain layui.windows.cache 缓存}中值代表的index项),用来确定是将哪个名称展示在可视范围内
+     */
+    auto: function auto(root, index) {
+      var tabsLeft = parseFloat(root.css("left")); // 获得被选中li标签
+      var thisLi = root.find('[lay-id="' + index + '"]');
+      if (!thisLi[0]) return;
+      var thisLeft = thisLi.position().left; // tabsLeft 必然是一个负数  -tabsLeft 指的是root藏住的长度
+      // 如果 thisLeft < -tabsLeft 代表这个li被藏在左边了
+      // 那就直接把它放在左边第一个的位置
+      if (thisLeft < -tabsLeft) {
+        return root.css("left", -thisLeft);
+      } // thisLeft + thisLi.outerWidth() 指的是li标签的尾部到root头部的距离
+      // outerWidth - tabsLeft 指的是可视的尾部到root头部的距离
+      // li被藏在了右边看不全
+      if (thisLeft + thisLi.outerWidth() >= root.outerWidth() - tabsLeft) {
+        // 计算被藏住的长度
+        var subLeft = thisLeft + thisLi.outerWidth() - (root.outerWidth() - tabsLeft);
+        root.children("li").each(function (i, item) {
+          var li = $(item),
+            left = li.position().left;
+          if (left + tabsLeft > subLeft) {
+            root.css("left", -left);
+            return false;
+          }
+        });
+      }
+    },
+
+    /**
+     * @inner 将内容向左边移动一个可视化距离
+     * @param {*} root 需要传入{@linkplain $tabGroup 选项卡组的jq对象}
+     */
+    right: function right(root, index) {
+      var tabsLeft = parseFloat(root.css("left")); // left + li.outerWidth() li标签的位置
+      // root.outerWidth() - tabsLeft 被展示到的最远位置
+      // 将第一个在右边被遮住的li放在第一个展示
+      root.children("li").each(function (index, item) {
+        var li = $(item),
+          left = li.position().left;
+        if (left + li.outerWidth() >= root.outerWidth() - tabsLeft) {
+          root.css("left", -left);
+          return false;
+        }
+      });
+    }
+  };
+
+  /**
    * 公共服务定位器（Service Locator）
-   * 
+   *
    * 用于注册和获取可动态调用的服务函数。
-   * 
+   *
    * 设计目的：
    *   - 解耦组件与具体服务实现
    *   - 支持运行时动态注册与调用
    *   - 为 invokeServiceLocator 提供底层支持
-   * 
+   *
    * 使用方式：
    *   - 通过 registerHandler 注册服务
    *   - 通过 invokeServiceLocator 调用服务
-   * 
+   *
    * 注意：
    *   - 此对象为全局共享，所有实例共用同一服务池
    *   - 服务名（methodName）需全局唯一，避免冲突
    *   - 服务函数执行时，this 指向调用 invoke 的组件实例
-   * 
+   *
    * @type {Object}
    */
   var publicServiceLocator = {
     /**
      * 注册一个服务
-     * 
+     *
      * @param {String} name - 服务的唯一标识符
      * @param {Function} service - 服务函数，将在 invoke 时执行
      * @returns {Object} 返回自身，支持链式调用（虽未使用，但保留扩展性）
@@ -376,7 +501,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
     },
     /**
      * 获取一个已注册的服务
-     * 
+     *
      * @param {String} name - 服务名称
      * @returns {Function|undefined} 返回服务函数，若未注册则返回 undefined
      */
@@ -387,15 +512,15 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
   /**
    * 全局公共渲染器列表
-   * 
+   *
    * 存储所有通过 registerRenderer 注册的通用渲染器。
    * 查找顺序：在实例级渲染器未匹配时，作为兜底查找池。
-   * 
+   *
    * 注意：
    *   - 所有元素应为 Renderer 实例
    *   - 由 registerRenderer 统一维护
    *   - 查找时按注册顺序遍历，先注册的优先级高
-   * 
+   *
    * @type {Renderer[]}
    */
   var publicRenderers = [];
@@ -417,15 +542,15 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
     input: new Renderer(
       /**
        * 判断是否适用 input 渲染器
-       * 
+       *
        * 此函数检查给定的表单元素是否为一个应由本渲染器处理的标准输入框。
-       * 
+       *
        * @function
        * @param {HTMLElement} formItem - 表单元素
        * @param {string} formType - 表单类型
        * @param {string} type - 组件类型
        * @returns {boolean} 如果元素是 `input` 类型、**不是**时间选择器（date），并且**不是**下拉树（selectTree）标记元素，则返回 `true`；否则返回 `false`。
-       * 
+       *
        * @description
        * 匹配规则如下：
        * 1.  **元素类型检查**：必须是 `input` 元素。
@@ -439,29 +564,29 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
           return false;
         }
 
-        // 排除时间选择器 - 默认使用 date 渲染器 
+        // 排除时间选择器 - 默认使用 date 渲染器
         if (isDatePickerElement(formItem)) {
           return false;
         }
-        
-        // 排除下拉树 - 默认使用 selectTree 渲染器 
+
+        // 排除下拉树 - 默认使用 selectTree 渲染器
         if (isSelectTreeElement(formItem)) {
           return false;
         }
 
-        return true; 
+        return true;
       },
       /**
        * 执行 input 渲染逻辑
-       * 
+       *
        * 对匹配的输入框元素进行初始化，建立与表单代理 (formProxy) 的双向数据绑定，
        * 并处理相关的用户交互、特殊属性和表单提交逻辑。
-       * 
+       *
        * @function
        * @param {Object} item - 渲染项配置
        * @param {HTMLElement} formItem - 表单 DOM 元素
        * @param {*} formProxy - formplus 实例
-       * 
+       *
        * @description
        * 主要执行流程：
        * 1.  **数据初始化**：将输入框的初始 `value` 同步到 `formProxy` 的数据模型中。
@@ -543,12 +668,12 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
     selectTree: new Renderer(
       /**
        * 判断是否适用 selectTree 渲染器
-       * 
+       *
        * @param {HTMLElement} formItem - 表单元素
        * @param {string} formType - 表单类型
        * @param {string} type - 组件类型
        * @returns {boolean} 是否匹配
-       * 
+       *
        * @description
        * 匹配规则：
        * 1. 必须是 input 元素
@@ -561,21 +686,21 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
         if (type && type != 'input') {
           return false;
         }
-        // 排除时间选择器 - 默认使用 date 渲染器 
+        // 排除时间选择器 - 默认使用 date 渲染器
         if (isDatePickerElement(formItem)) {
           return false;
         }
-      
-        // 判断下拉树 
-        return isSelectTreeElement(formItem);  
-      }, 
+
+        // 判断下拉树
+        return isSelectTreeElement(formItem);
+      },
       /**
        * 执行 selectTree 渲染逻辑
-       * 
+       *
        * @param {Object} item - 渲染项配置
        * @param {HTMLElement} formItem - 表单 DOM 元素
        * @param {*} formProxy - formplus 实例
-       * 
+       *
        * @description
        * 主要执行流程：
        * 1.  **UI 结构构建**：
@@ -607,17 +732,17 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
          * 获取 lay-filter 属性值，用于事件命名空间
          */
         var filter = getFilterNameOfFormItem.call(formProxy, formItem);
-        
+
         /**
          * 获取配置项
          */
         var attributeOptions = getElementAttributeOption(formItem);
-        
+
         /**
          * 合并配置项
          */
-        var options = deepMergeByTemplate(component.CONST.LAYUI_SELECT_TREE_OPTIONS, attributeOptions);
-        
+        var options = deepMergeByTemplate(component.CONST.LAYUI_SELECT_TREE_OPTIONS, attributeOptions, ['where', 'headers']);
+
         /**
          * 初始化数据
          */
@@ -650,9 +775,81 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
         // 隐藏当前的input表单元素,这个元素记录的应该是类似id的信息，前端展示的是名称信息,这两个是分开的dom
         // 区分当前保存值的class
         $input.addClass(component.CONST.CLASS_HIDE).addClass(component.CONST.CLASS_SELECT_TREE_VALUE);
-        // 创建一个 * + name 的输入框,作为后面展示的输入框,单独将它拎出来方便后面绑定事件
+        // 创建一个 * + name 的输入框,作为后面展示的输入框,单独将它拎出来方便后面绑定事件 // 你先暂时隐藏一下
         var placeholder = $input.attr('placeholder') || '';
         var $nameDom = $(`<input type = "text" autocomplete="off" class="layui-input layui-unselect layui-input-name ${component.CONST.CLASS_SELECT_TREE_TITLE}"  name = "*${formItem.name}"  placeholder = "${placeholder}">`);
+        /**
+         * 新增: 根据条件判断添加 LABEL 相关 DOM
+         */
+        if(options.showCheckbox && options.label){
+          var $labelDom = $(`
+            <div class = "layui-input ${component.CONST.CLASS_SELECT_TREE_LABEL} ${component.CONST.CLASS_HIDE}">
+              <div class = "${component.CONST.CLASS_LABEL_GROUP}">
+                <div class="layui-icon layui-icon-search layui-label-tabs-control ${component.CONST.CLASS_LABEL_SEARCH}"></div>
+                <div class="layui-icon layui-icon-prev layui-label-tabs-control ${component.CONST.CLASS_LABEL_PREV}"></div>
+                <div class="layui-icon layui-icon-next layui-label-tabs-control ${component.CONST.CLASS_LABEL_NEXT}"></div>
+                <div class="${component.CONST.CLASS_LABEL_TAB}">
+                  <ul class = "${component.CONST.CLASS_LABEL_TAB_TITLE}">
+                  </ul>
+                </div>
+              </div>
+            </div>
+          `);
+          $parent.append($labelDom);
+          //  顺便绑定事件
+          var $ulDom = $labelDom.find(`.${component.CONST.CLASS_LABEL_TAB_TITLE}`);
+          // 绑定删除事件
+          $ulDom.on('click', '.layui-icon-close', function(e){
+            layui.stope(e);
+            var layId = $(this).attr('lay-id');
+            var values = formProxy.getData(formItem.name);
+            var nearId = '';
+            if(values.length > 1){
+              var index = values.indexOf(layId);
+              var prevId = index > 0 ? values[index - 1] : '';
+              var nextId = index !== -1 && index < values.length - 1 ? values[index + 1] : '';
+              nearId = prevId || nextId
+            }
+            // 删除 DOM
+            $(this).parent().remove();
+            // 调整位置
+            if(nearId)
+              rollPage.auto($ulDom, nearId);
+            // 更新数据
+            // 1. 先复制数组（不修改原数组）
+            var newValues = values.slice();
+            // 2. 找到 layId 的索引并删除
+            var index = newValues.indexOf(layId);
+            if (index !== -1) {
+              newValues.splice(index, 1); // 删除 1 个元素
+            }
+            formProxy.setData(formItem.name, newValues);
+          });
+
+          // 滚动控制
+          $labelDom.on('click', `.${component.CONST.CLASS_LABEL_PREV}`, function(e){
+            layui.stope(e);
+            rollPage.left($ulDom);
+          });
+
+          $labelDom.on('click', `.${component.CONST.CLASS_LABEL_NEXT}`, function(e){
+            layui.stope(e);
+            rollPage.right($ulDom);
+          });
+
+          $labelDom.on('click', `.${component.CONST.CLASS_LABEL_SEARCH}`, function(e){
+            layui.stope(e);
+            // 隐藏 $labelDom
+            if(!$labelDom.hasClass(component.CONST.CLASS_HIDE)){
+              $labelDom.addClass(component.CONST.CLASS_HIDE)
+            }
+            if($nameDom.hasClass(component.CONST.CLASS_HIDE)){
+              $nameDom.removeClass(component.CONST.CLASS_HIDE)
+            }
+            $nameDom.val('');
+            $nameDom.focus();
+          });
+        }
         // 加入DOM树中和下拉箭头
         $parent.append($nameDom).append('<i class="layui-edge"></i>');
         // 这里都是js赋值,不会触发input propertychange事件,为了方便就去掉这个，不对 $nameDom 绑定事件了
@@ -666,7 +863,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
           // 将input框上面的信息赋给tree
           // 获取tree的id
           var treeId = $root.find(`[${component.CONST.LAYUI_TREE_ID}]`).attr(component.CONST.LAYUI_TREE_ID);
-          // 刷新树实例 
+          // 刷新树实例
           var treeInst = formProxy.cacheTree(treeId);
           if (!treeInst) return;
 
@@ -677,15 +874,6 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
           treeInst.search(null, treeValue);
           selectedOption(treeInst, treeValue);
         });
-
-        /**
-         * 新增，对$nameDom 绑定事件
-         */
-        if(options.showCheckbox === true && options.clearOnFocus === true){
-          $nameDom.on('focus', function(){
-            this.value = '';
-          });
-        }
 
         // dl dd节点模拟select下拉节点（dl > dd）
         var $dlDom = $('<dl class="layui-anim layui-anim-upbit" ></dl>');
@@ -730,12 +918,12 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
     date: new Renderer(
       /**
        * 判断是否适用 date 渲染器
-       * 
+       *
        * @param {HTMLElement} formItem - 当前被检查的表单 DOM 元素。
        * @param {string} formType - 表单类型
        * @param {string} type - 组件类型
        * @returns {boolean} 是否匹配
-       * 
+       *
        * @description
        * 匹配规则：
        * 1. 必须是 input 元素
@@ -752,16 +940,16 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
       },
       /**
        * 执行 date 渲染逻辑
-       * 
+       *
        * 对匹配的表单元素进行 layDate 组件的初始化和事件绑定。
        * 如果元素尚未被渲染，则根据其 `lay-options` 属性创建配置并渲染。
        * 如果已渲染，则获取其实例并扩展其行为。
        * 特别地，如果配置了 'lunar' 主题，则会应用农历增强功能。
-       * 
+       *
        * @param {Object} item - 渲染项配置
        * @param {HTMLElement} formItem - 表单 DOM 元素
        * @param {*} formProxy - formplus 实例，用于与表单数据模型进行交互（如 `setData`, `getData`）和事件分发。
-       * 
+       *
        * @description
        * 主要执行流程：
        * 1.  **检查渲染状态**：通过检查 `component.CONST.LAYUI_ALREADY_DATE_1` 和 `component.CONST.LAYUI_ALREADY_DATE_2` 这两个属性来判断该元素是否已被 layDate 渲染过。
@@ -886,8 +1074,8 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
        *    这确保了该渲染器仅处理具有标准复选框外观的元素。
        */
       function (formItem, formType, type) {
-        return type == "checkbox" && formItem.getAttribute("lay-skin") != "switch";  
-      }, 
+        return type == "checkbox" && formItem.getAttribute("lay-skin") != "switch";
+      },
       /**
        * 执行 checkbox 渲染逻辑
        *
@@ -922,7 +1110,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
          * 构建用于选择复选框组内所有复选框的 CSS 选择器
          */
         var checkboxGroupSelector = `[name="${formItem.name}"]`;
-    
+
         /**
          * 初始化数据
          * 读取 DOM 的初始状态，设置到 formProxy，并建立选项值缓存。
@@ -933,7 +1121,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
          * 缓存选项数据: 将 checkbox 各项缓存，以便在设置表单值时可以对比是否是一个合法的值
          * 使用 Set 存储所有选项的值，用于 O(1) 时间复杂度的快速查找，提升校验性能
          */
-        var eleValuesSet = new Set(); 
+        var eleValuesSet = new Set();
 
         // 遍历所有复选框，收集选中值并构建选项缓存
         item.querySelectorAll(checkboxGroupSelector).forEach((checkbox) => {
@@ -942,7 +1130,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
             checkboxValues.push(value);
           }
           // 将每个选项的值加入缓存
-          eleValuesSet.add(value); 
+          eleValuesSet.add(value);
         });
 
         // 将初始值设置到 formProxy 的模型中
@@ -968,12 +1156,12 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
               }
             });
             // 将最新的选中值同步到 formProxy 模型
-            formProxy.setData(formItem.name, newValues);  
+            formProxy.setData(formItem.name, newValues);
           }
         );
 
         /**
-         * 添加监视事件: 在监视值真正修改之前触发 
+         * 添加监视事件: 在监视值真正修改之前触发
          */
         formProxy.beforeExecute(formFilter, function(evt){
           /**
@@ -1028,7 +1216,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
             if(!checkFlag) {
               // 这里return 值 === false 赋值操作将会被打断，值进行回滚
               return false;
-            }  
+            }
 
             /**
              * DOM 上标记需要触发的函数名称
@@ -1094,7 +1282,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
            * 标记 DOM 状态与模型数据是否一致
            * 假设初始状态一致
            */
-          var isConsistent = true; 
+          var isConsistent = true;
           // 缓存 DOM 查询
           var currentCheckboxes = item.querySelectorAll(checkboxGroupSelector);
 
@@ -1124,9 +1312,9 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
             // 将从 DOM 读取的最新值同步到 formProxy 模型
             formProxy.setData(formItem.name, checkboxValues);
             // 同时，更新本地的选项值缓存 (eleValuesSet)，以反映可能的 DOM 变化
-            eleValuesSet.clear(); 
+            eleValuesSet.clear();
             currentCheckboxes.forEach(cb => eleValuesSet.add(cb.value));
-          }  
+          }
         });
       }
     ),
@@ -1155,8 +1343,8 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
        * @returns {boolean} 如果 `type` 为 `"radio"`，则返回 `true`；否则返回 `false`。
        */
       function (formItem, formType, type) {
-        return type == "radio";  
-      }, 
+        return type == "radio";
+      },
       /**
        * 执行 radio 渲染逻辑
        *
@@ -1204,9 +1392,9 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
           if (radio.checked) {
             // 单选框只有一个选中
             radioValue = radio.value;
-          } 
+          }
           // 将每个选项的值加入缓存
-          eleValuesSet.add(radio.value); 
+          eleValuesSet.add(radio.value);
         });
 
         // 将初始值设置到 formProxy 的模型中
@@ -1234,7 +1422,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
         );
 
         /**
-         * 添加监视事件: 在监视值真正修改之前触发 
+         * 添加监视事件: 在监视值真正修改之前触发
          */
         formProxy.beforeExecute(formFilter, function(evt){
           /**
@@ -1371,9 +1559,9 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
             // 将从 DOM 读取的最新值同步到 formProxy 模型
             formProxy.setData(formItem.name, radioValue);
             // 同时，更新本地的选项值缓存 (eleValuesSet)，以反映可能的 DOM 变化
-            eleValuesSet.clear(); 
+            eleValuesSet.clear();
             currentRadios.forEach(cb => eleValuesSet.add(cb.value));
-          }  
+          }
 
         });
 
@@ -1406,7 +1594,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
        * @returns {boolean} 如果 `type` 为 `"select"`，则返回 `true`；否则返回 `false`。
        */
       function (formItem, formType, type) {
-        return type == "select";  
+        return type == "select";
       },
       /**
        * 执行 select 渲染逻辑
@@ -1560,7 +1748,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
            * 从 formProxy 模型中读取当前值
            */
           var nowValue = formProxy.getData(formItem.name);
-          // 如果不同步就重新赋值 
+          // 如果不同步就重新赋值
           if(domValue != nowValue) {
             try {
               // 将从 DOM 读取的最新值同步到 formProxy 模型
@@ -1569,15 +1757,15 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
               // 获取当前所有 option 元素
               var currentOptions = formItem.querySelectorAll(optionSelector);
               // 同时，更新本地的选项值缓存 (eleValuesSet)，以反映可能的 DOM 变化
-              eleValuesSet.clear(); 
+              eleValuesSet.clear();
               if (currentOptions && currentOptions.length > 0) {
                 currentOptions.forEach(option => optionValuesSet.add(option.value));
               }
             } catch (error) {
               console.error('onSyncValue: 同步下拉框值和缓存时发生错误:', error);
             }
-          } 
-            
+          }
+
         });
 
         // 添加提示
@@ -1618,8 +1806,8 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
        *    这确保了该渲染器仅处理具有滑动开关外观的元素。
        */
       function(formItem, formType, type){
-        return type == "switch" && formItem.getAttribute("lay-skin") == "switch";  
-      }, 
+        return type == "switch" && formItem.getAttribute("lay-skin") == "switch";
+      },
       /**
        * 执行 switch 渲染逻辑
        *
@@ -1682,16 +1870,16 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
         );
 
         /**
-         * 添加监视事件: 在监视值真正修改之前触发 
+         * 添加监视事件: 在监视值真正修改之前触发
          * 用于响应外部数据更新（如表单回填、API 设置）
          */
         formProxy.beforeExecute(formFilter, function(evt){
-          
+
           /**
            * DOM 上标记需要触发的函数名称
            */
           var eventKey = "";
-          
+
           try{
             // switch 参数不用管，要么true, 要么false不能乱来
             item
@@ -1712,14 +1900,14 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
                 if(!eventKey){
                   eventKey = checkbox.getAttribute("lay-event");
                 }
-              
+
               });
 
           }catch (error) {
             console.warn('switch值校验时发生错误:', error);
             return false;
           }
-          
+
           // 重新渲染表单元素
           try {
             layui.form.render(
@@ -1729,7 +1917,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
           } catch (error) {
             console.error('Layui switch重渲染失败:', error);
           }
-          
+
           // 如果定义了 lay-event，则触发对应的事件处理器
           if(eventKey) {
             invokeLayEvent(formProxy, eventKey, evt);
@@ -1748,8 +1936,8 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
               switchValue = checkbox.checked;
             });
 
-          // 如果不同步就重新赋值 
-          if(switchValue != nowValue)  
+          // 如果不同步就重新赋值
+          if(switchValue != nowValue)
             formProxy.setData(formItem.name, switchValue);
         });
 
@@ -1867,14 +2055,14 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   /**
    * @function getFilterNameOfForm
    * 获取/生成表单的 lay-filter 属性值
-   * 
+   *
    * 为表单元素提供一个唯一的、可用于事件绑定的命名空间标识。
    * 如果元素已存在 `lay-filter` 属性，则返回其值；
    * 否则，生成一个唯一的临时标识并设置到元素上，避免重复生成。
-   * 
+   *
    * @param {HTMLElement} item 表单最外层的 DOM 元素（必须）
    * @returns {String} 返回 `lay-filter` 的值。保证不为 null 或 undefined。
-   * 
+   *
    * @throws {Error} 当传入的 item 不是有效的 HTMLElement 时抛出错误。
    */
   function getFilterNameOfForm(item){
@@ -1898,7 +2086,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   /**
    * @function
    * 获取/生成表单元素的 lay-filter 属性值
-   * 
+   *
    * @this component实例
    * @param {HTMLElement} formItem 表单元素
    * @returns {String} lay-filter 属性值
@@ -1930,7 +2118,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   /**
    * @function
    * 从dom属性中获取配置项参数
-   * 
+   *
    * @param {HTMLElement} formItem 表单元素
    * @param {String} attributeName 属性名称
    * @param {Object} defaultValue 缺省返回值
@@ -1951,8 +2139,8 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
       /**
        * 属性不存在，返回空对象
        */
-      return defaultValue; 
-    } 
+      return defaultValue;
+    }
     try {
       /**
        * 属性值处理:
@@ -1966,20 +2154,20 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
        *        ↓
        * ┌────────────────┐
        * │ 处理多余的反斜杠  │
-       * └──────┬─────────┘       
+       * └──────┬─────────┘
        *        ↓
        * ┌───────────────────┐
        * │ 去掉前后的空格      │
        * └───────────────────┘
-       * 
+       *
        */
       var jsonStr = optionsAttr.replace(/'/g, '"').replace(/\\"/g, '"').replace(/\\?"/g, '"').trim();
       if (!jsonStr) {
         /**
          * 空字符串返回空对象
          */
-        return defaultValue;    
-      } 
+        return defaultValue;
+      }
       return JSON.parse(jsonStr); // 解析为对象
     } catch (e) {
       console.warn(`解析属性 ${attributeName} 失败，非法 JSON 配置：`, optionsAttr);
@@ -1989,18 +2177,32 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
   /**
    * @function
-   * 合并配置项
-   * 
+   * 合并配置项（模板模式 + 开放字段支持）
+   *
    * @param {Object} target 默认值对象（模板）
    * @param {Object} source 用户配置对象
+   * @param {Array|Object} [options] 可选配置
+   *  - Array: 开放字段名数组，如 ['where', 'headers']
+   *  - Object: { openFields: ['where'] }
    * @returns {Object} 合并后的新对象
    * @description
    * 深度合并两个对象，只保留默认值中已有的字段（模板模式）。
-   * 用户配置中新增的字段不会被合并进来。
+   * 用户配置中新增的字段不会被合并进来，除非在 openFields 中声明。
    * 支持嵌套对象、数组、Date、RegExp 等复杂类型。
    * 使用 cloneDeep 实现深拷贝，确保不污染原始对象。
+   * @example
+   * deepMergeByTemplate(defaults, user, ['where']);
+   * deepMergeByTemplate(defaults, user, { openFields: ['where', 'headers'] });
    */
-  function deepMergeByTemplate(target, source) {
+  function deepMergeByTemplate(target, source, options) {
+    // 参数预处理：提取 openFields
+    var openFields = [];
+    if(layui.type(options) == 'array'){
+      openFields = options;
+    } else if (options && layui.type(options) === 'object') {
+      openFields = options.openFields || [];
+    }
+
     // 如果 target 不是对象或为 null，直接返回 target（终止递归）
     if (target === null || layui.type(target) !== 'object') {
       return target;
@@ -2012,7 +2214,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
     }
 
     // 先对默认值对象进行深拷贝，防止污染原始对象
-    var merged = cloneDeep(target); 
+    var merged = cloneDeep(target);
 
     // 获取默认值对象的所有键（包括 Symbol 类型），用于以默认值为模板进行合并
     var keys = Reflect.ownKeys(target);
@@ -2031,7 +2233,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
           // 如果用户配置中也存在该字段，并且也是对象，则递归合并
           if(layui.type(sourceValue) === 'object' && sourceValue !== null){
             merged[key] = deepMergeByTemplate(targetValue, sourceValue);
-          } 
+          }
           // 否则保留默认值对象（已通过 cloneDeep 拷贝，无需处理）
         } else if(sourceValue !== undefined){
           // 如果默认值中的字段是基础类型（如 string, number, boolean 等）
@@ -2040,7 +2242,18 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
         }
       }
     });
-    
+
+    // 处理开放字段（用户配置中有，但默认值中没有的字段）
+    if(openFields.length > 0){
+      var sourceKeys = Reflect.ownKeys(source);
+      layui.each(sourceKeys, function(i, key) {
+        // 如果是开放字段，且 source 中有值，则直接深拷贝挂载
+        if (openFields.includes(key) && Object.prototype.hasOwnProperty.call(source, key)) {
+          merged[key] = cloneDeep(source[key]);
+        }
+      });
+    }
+
     // 返回合并后的新对象
     return merged;
   }
@@ -2066,7 +2279,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
   /**
    * 从selectTree(abc) 格式的字符串中提取括号中的值
-   * 
+   *
    * @param {string} str - 待提取的字符串
    * @returns {string|null}
    */
@@ -2087,16 +2300,16 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
   /**
    * @function
-   * 
+   *
    * 同步 UI 显示值与树节点状态
    * 在监听的数据变化的时候修改input和dom  , input 已经修改了值的了
-   * 
+   *
    * @param {HTMLElement|jQuery} dom - 根容器
    * @param {HTMLElement} formItem - 原始 input 元素
    * @param {*} formProxy - formplus 实例
    * @param {string|string[]} value - 待修改的值
    * @returns {boolean} 是否校验通过
-   * 
+   *
    * @description
    * 1. 将 value 转为字符串（数组则 join）
    * 2. 查找对应节点文本
@@ -2110,7 +2323,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
     // 切换值
     // var setValue = layui.type(value) == 'array' ? value.join(',') : value;
     // 切换值(修改，使用converter进行转化)
-    var converterInst = formProxy.findConverter(layui.type(value), 'string');
+    var converterInst = formProxy.findConverter(layui.type(value), 'string', formItem.name);
     var setValue = converterInst instanceof converter ? converterInst.convert.call(formProxy, value) : '';
     // 获取值,并以这个值为准查找出匹配的文字 newValue
     // var oldValue = formItem.value;
@@ -2121,12 +2334,12 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
     if(!treeInst) return true;
 
     var values = [];
-    
+
     if(treeInst.mutiple){
       // // 多选就拆分字符串
       // values = setValue.split(",");
       // 切换值(修改，使用converter进行转化)
-      var mutipleConverterInst = formProxy.findConverter(layui.type(setValue), layui.type(values));
+      var mutipleConverterInst = formProxy.findConverter(layui.type(setValue), layui.type(values), formItem.name);
       values = mutipleConverterInst instanceof converter ? mutipleConverterInst.convert.call(formProxy, setValue) : [];
       var newValues = [];
       var checkFlag = true;
@@ -2152,9 +2365,48 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
       if(!checkFlag){
         return false;
       }
-      var converterInst = formProxy.findConverter(layui.type(newValues), 'string', formItem.name);
-      // 设置匹配的文字 newValue
-      $this.find(`.${component.CONST.CLASS_SELECT_TREE_TITLE}`).val(converterInst.convert.call(formProxy, newValues));
+      var converterInst = formProxy.findConverter(layui.type(newValues), 'string', `*${formItem.name}`);
+      var finalContent = converterInst.convert.call(formProxy, newValues);
+      var $labelDom = $this.find(`.${component.CONST.CLASS_SELECT_TREE_LABEL}`);
+      var $nameDom = $this.find(`.${component.CONST.CLASS_SELECT_TREE_TITLE}`);
+      if(!finalContent) {
+        // 设置匹配的文字 newValue
+        $this.find(`.${component.CONST.CLASS_SELECT_TREE_TITLE}`).val("");
+        // 空内容
+        if($labelDom.length > 0 && document.contains($labelDom.get(0))){
+          // 隐藏 $labelDom
+          if(!$labelDom.hasClass(component.CONST.CLASS_HIDE)){
+            $labelDom.addClass(component.CONST.CLASS_HIDE)
+          }
+          if($nameDom.hasClass(component.CONST.CLASS_HIDE)){
+            $nameDom.removeClass(component.CONST.CLASS_HIDE)
+          }
+        }
+      } else {
+        // 新增，查找 DOM 
+        if($labelDom.length > 0 && document.contains($labelDom.get(0))){
+          // 显示 $labelDom
+          if(!$nameDom.hasClass(component.CONST.CLASS_HIDE)){
+            $nameDom.addClass(component.CONST.CLASS_HIDE)
+          }
+          if($labelDom.hasClass(component.CONST.CLASS_HIDE)){
+            $labelDom.removeClass(component.CONST.CLASS_HIDE)
+          }
+          var valuesSet = [];
+          var existingLis = $labelDom.get(0).querySelectorAll('li');
+          // 获取下面的 li 标签集合
+          existingLis.forEach((li) => {
+            var layId = li.getAttribute('lay-id');
+            valuesSet.push(layId);
+          });
+          // 判断与原值是否相等
+          if(!formProxy.isStringOrStringArrayEqual(values, valuesSet)){
+            // 
+            formProxy.syncLiElements($labelDom.find(`.${component.CONST.CLASS_LABEL_TAB_TITLE}`), existingLis, valuesSet, values, newValues);
+          }
+        } 
+        $this.find(`.${component.CONST.CLASS_SELECT_TREE_TITLE}`).val(finalContent);
+      }
     } else {
       values = [setValue];
       var node = $this.find(`[data-id="${escapeSelector(setValue)}"] .layui-tree-txt`).get(0);
@@ -2218,7 +2470,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
     ele.parents(`.${CLASS_PREFIX}`).find("dl").scrollTop(0);
 
     // 绑定点击外部关闭
-    formProxy.removeClickOutsideEvent = lay.onClickOutside(
+    formItem.removeClickOutsideEvent = lay.onClickOutside(
       ele.parents(`.${CLASS_PREFIX}`)[0],
       function(){
         hideDown(ele.parents(`.${CLASS_PREFIX}`), $root, formProxy,formItem);
@@ -2243,7 +2495,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
    */
   function hideDown (choose, $root, formProxy, formItem){
     choose.removeClass(`${component.CONST.CLASS_SELECT_STATE_PREFIX}ed`);
-    formProxy.removeClickOutsideEvent && formProxy.removeClickOutsideEvent();
+    formItem.removeClickOutsideEvent && formItem.removeClickOutsideEvent();
     setTimeout(function(){
       doFixValue($root, formItem, formProxy, formProxy.getData(formItem.name))
     } , 200);
@@ -2253,10 +2505,10 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   /**
    * @function
    * 给树实例添加选中的样式
-   * 
+   *
    * @param {*} treeInst 树实例
    * @param {string | array<string>} values   需要选中的值
-   * 
+   *
    * @description
    * 查找 data-id 匹配的节点，为其 .layui-tree-txt 添加 TREE_SELECTED_CSS 类
    */
@@ -2273,14 +2525,14 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
   /**
    * 为带有 lay-hint 属性的 select 元素启用自动补全功能。
-   * 
+   *
    * 该功能监听输入事件，在用户输入时尝试匹配下拉选项，
    * 并在输入框旁显示灰色补全提示（类似 IDE 的自动补全）。
    * 支持方向键导航、Tab 键确认、失焦校验等交互行为。
-   * 
+   *
    * @param {*} formItem  - 表单对象
    * @param {*} formProxy - formplus 实例
-   * @returns 
+   * @returns
    */
   function enableComplate(formItem, formProxy){
     /**
@@ -2355,14 +2607,14 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
   /**
    * 执行自动匹配和提示逻辑。
-   * 
+   *
    * 根据当前输入值，在 select 的下拉选项中查找匹配项，
    * 若存在以输入内容开头的选项，则显示补全提示。
-   * 
+   *
    * @param {*} formItem - 表单对象
    * @param {*} e        - DOM 事件对象
    * @param {*} auto     - 是否处于自动推荐模式（true=推荐，false=仅导航）
-   * @returns 
+   * @returns
    */
   function autoComplete(formItem, e, auto = true){
     var $target = $(e.target);
@@ -2371,7 +2623,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
     // 输入为空时，取消补全
     if (!inputVal) {
-      cancelComplete(e); 
+      cancelComplete(e);
       return;
     }
 
@@ -2514,9 +2766,9 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
   /**
    * 取消自动补全显示。
-   * 
+   *
    * 隐藏补全提示层，并清空内容。
-   * 
+   *
    * @param {*} e         - DOM 事件对象
    * @param {*} formItem  - 表单对象
    * @param {*} formProxy - formplus 实例
@@ -2530,11 +2782,11 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   /**
    * @method wave
    * 添加水波纹动画效果到指定容器内的按钮元素。
-   * 
+   *
    * 该函数会检查是否已渲染过（通过 `lay-wave` 属性），避免重复初始化。
    * 支持通过 `lay-options` 属性或函数参数 `option` 配置动画类型、颜色、触发方式等。
    * 波纹元素的创建和事件绑定均在此函数内完成。
-   * 
+   *
    * @param {jQuery} destination - 包含目标按钮的 jQuery 对象容器。
    * @param {Object} [option={}] - 可选的配置项对象。此参数的优先级高于元素的 `lay-options` 属性。
    * @param {string} [option.type='inset'] - 动画类型，可选值：'inset' (内扩), 'out' (外扩)。
@@ -2544,13 +2796,13 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
    * @param {string} [option.spreadSize] - 波纹扩散大小（仅 `inset` 类型生效），需包含单位。若未设置，则根据按钮尺寸自动计算。
    * @param {string} [option.trigger='click'] - 触发方式，可选值：'click' (点击), 'mouseenter' (鼠标移入), 'always' (常驻动画)。
    * @param {boolean} [option.center=false] - 波纹起始位置是否居中（仅 `inset` 类型生效）。`false` 时从点击位置开始。
-   * 
+   *
    * @returns {void}
-   * 
+   *
    * @example
    * // 基本用法
    * wave($('#myButtonContainer'));
-   * 
+   *
    * // 使用参数覆盖配置
    * wave($('#myButtonContainer'), {
    *   type: 'out',
@@ -2635,8 +2887,8 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
           waveAnimateOut(destination, opt);
         }, 1000);
       });
-    } 
-    
+    }
+
     // 10. 添加 mouseenter、mouseleave 事件
     if (opt.trigger === 'mouseenter') {
       destination.on('mouseenter', 'button', function(e){
@@ -2652,16 +2904,16 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   /**
    * @function waveAnimateIn
    * 触发波纹元素的进入动画。
-   * 
+   *
    * 通过为波纹元素添加特定的 CSS 动画类名来启动动画。
    * 如果动画类已存在，则不重复添加。
-   * 
+   *
    * @param {jQuery} destination - 包含波纹元素的容器 jQuery 对象。
    * @param {Object} opt - 包含动画配置的对象，特别是 `type` 字段用于确定使用哪个波纹元素和动画类。
    * @param {string} opt.type - 动画类型 ('inset' 或 'out')，用于确定目标元素和类名。
-   * 
+   *
    * @returns {void}
-   * 
+   *
    * @private
    */
   function waveAnimateIn (destination, opt) {
@@ -2675,15 +2927,15 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   /**
    * @function waveAnimateOut
    * 触发波纹元素的退出动画或移除动画状态。
-   * 
+   *
    * 通过移除波纹元素上特定的 CSS 动画类名来停止或重置动画。
-   * 
+   *
    * @param {jQuery} destination - 包含波纹元素的容器 jQuery 对象。
    * @param {Object} opt - 包含动画配置的对象，特别是 `type` 字段用于确定使用哪个波纹元素和动画类。
    * @param {string} opt.type - 动画类型 ('inset' 或 'out')，用于确定目标元素和类名。
-   * 
+   *
    * @returns {void}
-   * 
+   *
    * @private
    */
   function waveAnimateOut (destination, opt) {
@@ -2696,18 +2948,18 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
    * @function setRipplePosition
    * （仅用于 `inset` 类型且 `center` 为 `false` 时）
    * 根据鼠标点击事件，动态设置内扩波纹 (`inset`) 的起始位置和扩散尺寸。
-   * 
+   *
    * 会修改波纹元素的 `left`、`top` 样式以及 `--layui-spread-size` CSS 自定义属性。
-   * 
+   *
    * @param {Event} e - 鼠标点击事件对象。
    * @param {Object} opt - 动画配置对象，用于判断是否需要执行此操作。
    * @param {string} opt.type - 动画类型，必须为 'inset' 才会执行。
    * @param {boolean} opt.center - 是否居中，`true` 时此函数不执行任何操作。
    * @param {jQuery} $button - 按钮元素的 jQuery 对象，用于获取位置信息。
    * @param {jQuery} destination - 容器元素的 jQuery 对象，用于查找波纹元素。
-   * 
+   *
    * @returns {void}
-   * 
+   *
    * @private
    */
   function setRipplePosition(e, opt, $button, destination, btnWidth, btnHeight){
@@ -2733,25 +2985,25 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
   /**
    * 判断元素是否应被忽略
-   * @param {*} elem 
-   * @returns 
+   * @param {*} elem
+   * @returns
    */
   function shouldIgnoreElement(elem) {
-    return elem.hasAttribute(component.CONST.LAYUI_IGNORE) || 
+    return elem.hasAttribute(component.CONST.LAYUI_IGNORE) ||
       elem.hasAttribute(component.CONST.LAYUI_IGNORE_PLUS);
   }
 
   /**
    * 应用合适的渲染器
-   * @param {*} formProxy 
-   * @param {*} formItem 
-   * @param {*} formType 
-   * @param {*} containerDOM 
-   * @returns 
+   * @param {*} formProxy
+   * @param {*} formItem
+   * @param {*} formType
+   * @param {*} containerDOM
+   * @returns
    */
   function applyRenderer(formProxy, formItem, formType, containerDOM) {
     var customRenderer = formProxy.findRenderer(formItem, formItem.type, formType);
-    
+
     if (customRenderer instanceof Renderer) {
       customRenderer.render(containerDOM, formItem, formProxy);
       return;
@@ -2768,8 +3020,8 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
   /**
    * 确定表单类型
-   * @param {*} formItem 
-   * @returns 
+   * @param {*} formItem
+   * @returns
    */
   function getFormType(formItem) {
     if (!formItem || !formItem.tagName) {
@@ -2835,7 +3087,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   /**
    * @function
    * 深拷贝
-   * 
+   *
    * @param {*} o 待深拷贝的对象
    * @returns {*} 深拷贝后新产生的对象
    */
@@ -2887,7 +3139,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   /**
    * @function
    * 判断是否为时间选择器（由属性标识）
-   * 
+   *
    * @param {HTMLElement} formItem 表单 DOM 对象
    * @returns {boolean} 是否为时间选择器
    * @description
@@ -2909,9 +3161,9 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   /**
    * @function
    * 判断是否为下拉树（select-tree）结构
-   * 
+   *
    * @param {HTMLElement} formItem 表单 DOM 对象
-   * @returns {boolean} 
+   * @returns {boolean}
    * @description
    * 下拉树（select-tree）结构特征：
    *  - input 外层包裹 layui-select-title
@@ -2923,15 +3175,15 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
     var root = parent.parentNode;
     if (!root) return false;
-  
+
     // 兼容性写法：支持 classList 和 className
-    var hasParentClass = parent.classList 
+    var hasParentClass = parent.classList
       ? parent.classList.contains(component.CONST.CLASS_SELECT_TREE_OUTER_TITLE)
       : ` ${parent.className} `.indexOf(` ${component.CONST.CLASS_SELECT_TREE_OUTER_TITLE} `) > -1;
 
-    var hasRootClass = root.classList 
+    var hasRootClass = root.classList
       ? root.classList.contains(component.CONST.CLASS_SELECT_STATE_PREFIX)
-      : ` ${root.className} `.indexOf(` ${component.CONST.CLASS_SELECT_STATE_PREFIX} `) > -1; 
+      : ` ${root.className} `.indexOf(` ${component.CONST.CLASS_SELECT_STATE_PREFIX} `) > -1;
 
     return hasParentClass && hasRootClass;
   }
@@ -2939,15 +3191,15 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   /**
    * @function
    * 更新表单元素的字数提示显示
-   * 
+   *
    * @param {HTMLElement} formItem - 表单 DOM 元素
    * @param {string} value - 当前输入值
    * @param {number} maxlength - 最大长度限制
    * @param {string} attrName - 要设置的 DOM 属性名（如 'dataMaxlength'）
-   * 
+   *
    * @description
    * 更新父元素的指定属性为 "当前长度/最大长度" 格式文本
-   * 
+   *
    */
   function updateMaxlengthDisplay(formItem, value, maxlength, attrName) {
     var length = String(value || '').length;
@@ -2961,10 +3213,10 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   /**
    * @function
    * 处理 maxlength 字数限制
-   * 
+   *
    * @param {HTMLElement} formItem 表单 DOM 对象
    * @param {*} formProxy formplus 实例
-   * 
+   *
    * @description
    * 1. 解析 maxlength 属性
    * 2. 初始化字数显示
@@ -2980,7 +3232,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
     var tempName = `${formItem.name}-limit`;
     var attrName = 'dataMaxlength';
-  
+
     // 初始化显示
     updateMaxlengthDisplay(formItem, formItem.value, maxlength, attrName);
     formProxy.setData(tempName, `${String(formItem.value).length}/${maxlength}`);
@@ -2995,17 +3247,17 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   /**
    * @function
    * 处理 lay-affix 特殊行为
-   * 
+   *
    * @param {HTMLElement} formItem 表单 DOM 对象
    * @param {*} formProxy formplus 实例
    * @param {String} formFilter lay-filter 值
-   * 
+   *
    * @description
    * 仅处理 lay-affix="number" 和 "clear"
    * 绑定 input-affix 事件，同步数据到 formProxy
    */
   function handleAffix(formItem, formProxy, formFilter) {
-    
+
     /**
      * 获取 affix 属性,仅处理 数字-number 和 清空-clear 两类内置 affix
      * 其他自定义 affix 需要自行实现
@@ -3024,7 +3276,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   /**
    * @function
    * 渲染下拉树核心（layui.tree）
-   * 
+   *
    * @param {jQuery} $ddDom - dd 容器
    * @param {Object} options - 配置
    * @param {jQuery} $root - 根容器
@@ -3033,11 +3285,11 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
    * @param {*} formProxy formplus 实例
    * @param {String} filter lay-filter 值
    * @param {HTMLElement} formItem - 表单项元素
-   * 
+   *
    * @description
    * 使用 layui.tree 渲染下拉树，支持多选、搜索、异步加载。
    * 绑定 click、input、ajax 数据更新等逻辑。
-   * 
+   *
    * 支持：
    * - 单选/多选切换
    * - 搜索过滤
@@ -3089,7 +3341,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
               values = filteredValues;
             } else {
               formProxy.setData(formItem.name, currentValues);
-              values = currentValues; 
+              values = currentValues;
             }
           } else {
             // 单选模式
@@ -3128,8 +3380,8 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
         if (!treeInst) return;
 
         // 自动展开
-        if (!$root.hasClass(`${component.CONST.CLASS_SELECT_STATE_PREFIX}ed`) && 
-        !$root.hasClass(`${component.CONST.CLASS_SELECT_STATE_PREFIX}up`)) {
+        if (!$root.hasClass(`${component.CONST.CLASS_SELECT_STATE_PREFIX}ed`) &&
+          !$root.hasClass(`${component.CONST.CLASS_SELECT_STATE_PREFIX}up`)) {
           $nameDom.trigger('click');
         }
 
@@ -3176,7 +3428,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
   /**
    * 为 Layui layDate 组件准备农历增强选项
-   * 
+   *
    * 功能：
    * - 阻止默认预览，注入自定义农历信息
    * - 在预览区显示农历、节气、节假日、班休标识
@@ -3184,7 +3436,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
    * - 支持年/月面板显示农历信息
    * - 兼容 Layui 2.10.3+ 的 DOM 重建问题（面板销毁重建）
    * - 右键弹出完整农历详情（节气、干支、生肖等）
-   * 
+   *
    * @param {Object} options - layDate 原始配置对象（会被修改并返回）
    * @returns {Object} 修改后的 options，已注入农历相关事件
    */
@@ -3234,7 +3486,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
         this.cellRender(date);
       };
     });
-    
+
     /**
      * 核心渲染函数：控制每个单元格和预览区的内容
      * 将实际渲染逻辑委托给外部函数 cellRender，保持 this 上下文
@@ -3247,15 +3499,15 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
   /**
    * 自定义单元格与预览区渲染函数
-   * 
+   *
    * 此函数会被 Layui 在渲染每个日期、月份、年份格子时调用
    * 同时也会被 ready/change/onNow 事件触发，用于更新顶部预览
-   * 
+   *
    * @param {Object} ymd - 日期对象 {year, month, date}
    * @param {Function} [render] - 渲染函数（仅面板调用时存在）
    * @param {Object} [info] - 面板信息 {type: 'date'|'month'|'year'}
    * @param {Object} [options] - 配置项
-   * 
+   *
    * @this {Object} layDate 实例
    */
   function cellRender(ymd, render, info, options){
@@ -3277,8 +3529,8 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
         var holidayTarget = holiday.getTarget();
         var day = holiday.getDay();
         // 节日名称
-        var name = holidayTarget === day ? holiday.getName() : null;   
-        // 班/休标识 
+        var name = holidayTarget === day ? holiday.getName() : null;
+        // 班/休标识
         var badge = holidayTarget ? (holiday.isWork() ? '班' : '休') : null;
         // 是否为法定假日
         var isHoliday = holidayTarget && !holiday.isWork();
@@ -3332,9 +3584,9 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
         // 拼接单元格内容
         var content = [
           '<div class="' + clazz + '">',
-            '<b>' + date + '</b>',
-            '<i>' + displayText + '</i>',
-            badgeHtml,
+          '<b>' + date + '</b>',
+          '<i>' + displayText + '</i>',
+          badgeHtml,
           '</div>'
         ].join('');
         var $content = $(content);
@@ -3373,10 +3625,10 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
   /**
    * 获取有效的预览区域 DOM 节点
-   * 
+   *
    * 由于 Layui 2.10.3+ 在某些情况下会重建 DOM，
    * 导致之前的 jQuery 引用失效，因此需要动态查找并更新引用。
-   * 
+   *
    * @param {jQuery} $previewEl - jQuery 包装的预览元素
    * @param {Object} instance - layDate 实例
    * @returns {HTMLElement|null} 有效的 DOM 节点或 null
@@ -3411,7 +3663,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
   /**
    * 生成预览区域 HTML
-   * 
+   *
    * @param {Object} solar - Solar 实例
    * @param {Object} lunar - Lunar 实例
    * @param {Object|null} holidayInfo - 节假日信息
@@ -3443,11 +3695,11 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
     return [
       '<div class="preview-inner">',
-        '<div style="color:#333;">农历' + solar.getMonthInChinese() + '月' + solar.getDayInChinese() + '</div>',
-        '<div style="font-size:10px">' + solar.getYearInGanZhi() + solar.getYearShengXiao() + '年</div>',
-        '<div style="font-size:10px">' + solar.getMonthInGanZhi() + '月 ' + solar.getDayInGanZhi() + '日</div>',
-        '<div class="badge" style="' + holidayBadgeStyle + '">' + (holidayInfo.badge || '') + '</div>',
-        '<div class="badge" style="' + festivalBadgeStyle + '">' + (festivalText || '') + '</div>',
+      '<div style="color:#333;">农历' + solar.getMonthInChinese() + '月' + solar.getDayInChinese() + '</div>',
+      '<div style="font-size:10px">' + solar.getYearInGanZhi() + solar.getYearShengXiao() + '年</div>',
+      '<div style="font-size:10px">' + solar.getMonthInGanZhi() + '月 ' + solar.getDayInGanZhi() + '日</div>',
+      '<div class="badge" style="' + holidayBadgeStyle + '">' + (holidayInfo.badge || '') + '</div>',
+      '<div class="badge" style="' + festivalBadgeStyle + '">' + (festivalText || '') + '</div>',
       '</div>'
     ].join('');
   }
@@ -3455,9 +3707,9 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
   /**
    * 根据 layDate 实例获取预览区域的 jQuery 对象
-   * 
+   *
    * 利用 elem 上的 lay-key 属性定位对应的 laydate 面板
-   * 
+   *
    * @param {*} options - layDate 配置项，包含 elem（绑定元素）
    * @returns {jQuery} 预览区域
    */
@@ -3469,7 +3721,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
   /**
    * 执行表单元素上面的 lay-event 事件
-   * 
+   *
    * @param {*} formProxy formplus 实例
    * @param {string} eventKey 事件名称
    * @param {*} evt 回调参数
@@ -3488,14 +3740,14 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   /**
    * 转义字符串中可用于 CSS 选择器的特殊字符
    * 兼容 IE9+ 及所有现代浏览器
-   * 
+   *
    * @param {String|Number|Boolean} str - 待转义的值
    * @returns {String} 转义后的字符串
    */
   function escapeSelector(str) {
     // 1. 确保输入为字符串
     str = str == null ? '' : String(str);
-    
+
     // 2. 手动转义 CSS 选择器中具有特殊含义的字符
     //    使用字符类匹配，避免正则元字符问题
     return str.replace(/([\\!"#$%&'()*+,.\/:;<=>?@\[\\\]^`{|}~])/g, '\\$1');
@@ -3505,12 +3757,12 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
    * @constructor
    * 表单渲染器
    * 用于定义一个根据条件决定是否渲染表单项的处理器。
-   * 
+   *
    * @param {Function} condition 判断是否可以由此渲染器进行渲染 (formItem, formType, type) => Boolean
    * @param {Function} render 渲染方法 (item, formItem, formProxy) => void
-   * 
+   *
    * @throws {TypeError} 当 `render` 参数不是函数时抛出。
-   * 
+   *
    */
   function Renderer (condition, render){
 
@@ -3543,15 +3795,15 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
    * @constructor
    * 类型转化器
    * 用于定义一个判断是否支持类型转换以及执行转换操作的处理器。
-   * 
+   *
    * @param {*} support  是否支持转化
    * @param {*} convert  执行转换操作的函数。
-   * 
+   *
    * @throws {TypeError} 当 `support` 或 `convert` 参数不是函数时抛出。
-   * 
+   *
    * boolean support(I, O, name);
    * O convert(input);
-   * 
+   *
    */
   function converter (support, convert) {
     // 参数校验
@@ -3597,9 +3849,9 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
     name: KEY,
 
     /**
-     * @inner 
+     * @inner
      * 默认配置项
-     * 
+     *
      * @desc 应该指的是render方法中能传入进来的配置项
      */
     config: {
@@ -3780,6 +4032,55 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
        */
       CLASS_WAVE_ONCE: CLASS_WAVE_ONCE,
 
+      /**
+       * @inner
+       * 下拉树组件中标记 LABEL 的样式展示名称
+       * @type {string}
+       */
+      CLASS_SELECT_TREE_LABEL: CLASS_SELECT_TREE_LABEL,
+
+      /**
+       * @inner
+       * 下拉树组件中标记 LABEL 外层聚合 DIV 的样式展示名称
+       * @type {string}
+       */
+      CLASS_LABEL_GROUP: CLASS_LABEL_GROUP,
+
+      /**
+       * @inner
+       * 下拉树组件中标记 LABEL 搜索的 DIV 样式展示名称
+       * @type {string}
+       */
+      CLASS_LABEL_SEARCH: CLASS_LABEL_SEARCH,
+      
+      /**
+       * @inner
+       * 下拉树组件中标记 LABEL 向左滚动的 DIV 样式展示名称
+       * @type {string}
+       */
+      CLASS_LABEL_PREV: CLASS_LABEL_PREV,
+
+      /**
+       * @inner
+       * 下拉树组件中标记 LABEL 向右滚动的 DIV 样式展示名称
+       * @type {string}
+       */
+      CLASS_LABEL_NEXT: CLASS_LABEL_NEXT,
+      
+      /**
+       * @inner
+       * 下拉树组件中标记 LABEL 滚动区域外层的 DIV 样式展示名称
+       * @type {string}
+       */
+      CLASS_LABEL_TAB: CLASS_LABEL_TAB,
+
+      /**
+       * @inner
+       * 下拉树组件中标记 LABEL 滚动区域内层的 UL 样式展示名称
+       * @type {string}
+       */
+      CLASS_LABEL_TAB_TITLE: CLASS_LABEL_TAB_TITLE,
+
     },
 
     /**
@@ -3865,7 +4166,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
    * @private
    * @method initData
    * 初始化表单映射数据
-   * 
+   *
    * @this component实例
    */
   Class.prototype.initData = function () {
@@ -3875,15 +4176,15 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   /**
    * @private
    * @method getData
-   * 获取表单映射数据 
-   * 
+   * 获取表单映射数据
+   *
    * - 当不传入 `key` 时，返回整个 `formData` 对象的深拷贝。
    * - 当传入 `key` 时：
    *   - 如果 `formData` 中存在该 `key`，则返回对应值的深拷贝（即使值为 `false`, `0`, `''` 等 false 值）。
    *   - 如果 `formData` 中不存在该 `key`，则返回 `null`。
-   * 
+   *
    * @this component实例
-   * 
+   *
    * @param {string} [key] - 要获取数据的键名(表单元素的 `name` 属性值)。 如果省略，则返回整个“受管理的”表单数据对象。
    * @returns {*} 请求的数据，或整个表单数据对象的深拷贝，或 `null`（当键不存在时）。
    */
@@ -3918,13 +4219,13 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
    * @method setData
    * 安全地设置表单数据，支持动态添加新属性。
    * 内部根据环境和属性存在性，选择最优策略。
-   * 
+   *
    * @this component实例
    */
   Class.prototype.setData = function (key, value) {
 
     var formData = this.config.formData;
-    
+
     // --- 策略 1: 如果环境支持 Proxy ---
     if(HAS_PROXY) {
       // 如果尚未升级为 Proxy，则进行升级
@@ -3968,7 +4269,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
    * @returns {boolean} 是否相等
    */
   Class.prototype.isStringOrStringArrayEqual = function (value, oldValue) {
-    if(value === undefined || oldValue === undefined){
+    if(value === undefined || oldValue === undefined || value === null || oldValue === null){
       return false;
     }
 
@@ -3983,9 +4284,13 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
     if(value.length != oldValue.length) return false;
 
+    // 增加忽略顺序
+    var a = value.slice().sort();
+    var b = oldValue.slice().sort();
+
     var res = true;
-    layui.each(value, (k, v) => {
-      if(oldValue[k] != v){
+    layui.each(a, (k, v) => {
+      if(b[k] != v){
         res = false;
         return true;
       }
@@ -3995,9 +4300,80 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   },
 
   /**
+   * 同步 li 标签与 valuesSet 数组，添加/删除对应 lay-id 的 li
+   * @param {jQuery} $tabTitleDom  jQuery 对象，指向 ul 或父容器
+   * @param {*} existingLis  查找到的所有 li 标签
+   * @param {string[]} valuesSet 当前数组（当前的 lay-id 列表）
+   * @param {string[]} value     目标数组（期望的 lay-id 列表）
+   * @param {string[]} newValues 目标文本列表
+   */
+  Class.prototype.syncLiElements = function($tabTitleDom, existingLis, valuesSet, value, newValues) {
+
+    // 1. 建立当前 li 的 lay-id 映射
+    var existingMap = new Map();
+    existingLis.forEach(li => {
+      var layId = li.getAttribute('lay-id');
+      if (layId !== null) {
+        existingMap.set(layId, li);
+      }
+    });
+
+    // 2. 找出要删除的：在 valuesSet 中，但不在 value 中（当前有，目标没有 → 删除）
+    var toRemove = [];
+    valuesSet.forEach(id => {
+      if (!value.includes(id)) {
+        toRemove.push(id);
+      }
+    });
+
+    var removeId = '';
+
+    // 3. 删除不需要的 li
+    toRemove.forEach(id => {
+      var li = existingMap.get(id);
+      if (li) {
+        li.remove(); // 自动从父节点移除
+        removeId = id;
+      }
+    });
+
+    var nearestId = '';
+    if(removeId){
+      var index = valuesSet.indexOf(removeId);
+      for(; index >= 0; index--){
+        if(value.length > index){
+          var stillExists = $tabTitleDom.find(`li[lay-id="${value[index]}"]`).length > 0;
+          if (stillExists) {
+            nearestId = value[index];
+            break;
+          }
+        }
+      }
+    }
+
+    if(nearestId) rollPage.auto($tabTitleDom, nearestId);
+
+    // 4. 添加新的 li：遍历目标数组 value，如果当前没有，则创建
+    layui.each(value, function(k, v){
+      if(!existingMap.has(v) ){
+        var name = newValues[k];
+        // 拼接 HTML
+        var $li = $(`
+          <li class="layui-label-tab-li" lay-id="${v}">${name || ''}<i class="layui-icon layui-icon-close" lay-id="${v}"></i></li>
+        `);
+        // 插入
+        $tabTitleDom.append($li);
+        // 调整位置
+        rollPage.auto($tabTitleDom, v);
+      }
+    })
+
+  }
+
+  /**
    * @method createFormDataProxy
    * 创建一个 Proxy 来拦截 formData 的操作。
-   * 
+   *
    * @this component实例
    * @param {Object} target - 要代理的原始对象。
    * @param {Object} context - 组件实例上下文 (this)。
@@ -4012,9 +4388,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
       },
       set(obj, prop, value) {
         var oldValue = obj[prop];
-
         if(self.isStringOrStringArrayEqual(value, oldValue)) return true;
-
         // 特殊标志参数处理
         if(prop == '__isReactiveProxy'){
           return Reflect.set(obj, prop, value);
@@ -4037,18 +4411,15 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
           oldValue: oldValue,
         };
         // 执行 before 事件 (保持与现有逻辑一致)
-        if (layui.event.call(self, component.CONST.MOD_NAME, 
-            `beforeExecute-${component.CONST.MOD_ID}-${self.config.id}[${formFilter}]`,eventData) === false) {
+        if (layui.event.call(self, component.CONST.MOD_NAME,
+          `beforeExecute-${component.CONST.MOD_ID}-${self.config.id}[${formFilter}]`,eventData) === false) {
           return true; // 拦截
         }
-
         // 设置值
         var result = Reflect.set(obj, prop, value);
-
         // 触发更新事件
-        layui.event.call(self, component.CONST.MOD_NAME, 
-            `${component.CONST.MOD_ID}-${self.config.id}[${formFilter}]`, eventData);
-
+        layui.event.call(self, component.CONST.MOD_NAME,
+          `${component.CONST.MOD_ID}-${self.config.id}[${formFilter}]`, eventData);
         return result;
       },
     });
@@ -4057,11 +4428,11 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   /**
    * @method scanForm
    * 扫描并渲染表单
-   * 
+   *
    * @this component实例
    * @param {String|null} type    渲染类型: select;radio;checkbox...
    * @description
-   *  
+   *
    */
   Class.prototype.scanForm = function (type) {
     var self = this;
@@ -4083,7 +4454,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
             if(!formData.hasOwnProperty(name)) {
               // 初始化 formData
               self.setData(name, formType == "checkbox" ? [] : "");
-              
+
               // 应用渲染器
               applyRenderer(self, formItem, formType, containerDOM);
             } else {
@@ -4105,18 +4476,18 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
         }
       }
     });
-    
+
   };
 
   /**
    * @method on
    * 表单事件监听
-   * 
+   *
    * @this component实例
    * @param {String} events 事件信息，可以直接传表单元素的 name 属性值,也可以将表单元素的 lay-filter 属性值用括号包装
    * @param {Function} callback  回调函数
    * @description
-   *  
+   *
    */
   Class.prototype.on = function (events, callback) {
     if(layui.type(callback) != 'function') {
@@ -4146,8 +4517,8 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
    * 用于判断，接下来的 on 事件是否触发
    * @private
    * 内部使用，不做检验
-   * @param {*} layFilter 
-   * @param {*} callback 
+   * @param {*} layFilter
+   * @param {*} callback
    */
   Class.prototype.beforeExecute = function(layFilter, callback){
     return layui.onevent.call(this, component.CONST.MOD_NAME, `beforeExecute-${component.CONST.MOD_ID}-${this.config.id}[${layFilter}]`, callback);
@@ -4158,8 +4529,8 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
    * 用于触发同步html与proxy的事件
    * @private
    * 内部使用，不做检验
-   * @param {*} name 用name方便取值 
-   * @param {*} callback 
+   * @param {*} name 用name方便取值
+   * @param {*} callback
    */
   Class.prototype.onSyncValue = function(name, callback){
     return layui.onevent.call(this, component.CONST.MOD_NAME, `syncValue-${component.CONST.MOD_ID}-${this.config.id}[${name}]`, callback);
@@ -4168,12 +4539,12 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   /**
    * @method cacheTree
    * 缓存/获取 laydate 实例
-   * 
+   *
    * @this component实例
    * @param {String} treeId laydate 实例的id
    * @param {*} treeInst laydate 实例
    * @returns {*} laydate 实例
-   *  
+   *
    */
   Class.prototype.cacheTree = function (treeId, treeInst) {
     if(!this.trees) this.trees = {};
@@ -4184,7 +4555,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   /**
    * @method registerConverter
    * 注册一个自定义转换器，用于数据输入输出的格式转换。
-   * 
+   *
    * @this component 实例
    * @param {Function} support 判断是否支持当前 I/O 类型的函数，签名: (inputType, outputType, name) => Boolean
    * @param {Function} convert 转换函数，签名: (value, data, ctx) => any
@@ -4198,7 +4569,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   /**
    * @method findConverter
    * 查找匹配的转换器：优先实例级，后全局内置。
-   * 
+   *
    * @this component 实例
    * @param {*} I 输入数据类型或标识
    * @param {*} O 输出数据类型或标识
@@ -4221,29 +4592,29 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   /**
    * @method invokeServiceLocator
    * 调用服务定位器(私有 -> 公共)
-   * 
+   *
    * @param {String} methodName   方法名称
-   * @param {...*} [args] - 任意数量的参数，将传递给对应的服务方法 
+   * @param {...*} [args] - 任意数量的参数，将传递给对应的服务方法
    * @this component实例
    * @returns {*} 服务函数的返回值；若服务不存在或非函数，返回 null
-   * 
+   *
    * @description
    * 执行流程：
    *   1. 从 publicServiceLocator 中查找 methodName 对应的服务
    *   2. 校验服务是否存在且为函数类型（使用 layui.type）
    *   3. 若存在，apply 调用该函数，this 指向当前组件实例，参数为 arguments.slice(1)
    *   4. 若不存在，返回 null（表示调用失败）
-   * 
+   *
    * 设计意图：
    *   - 实现“命令模式”或“插件式调用”
    *   - 支持在配置中声明服务名，运行时动态执行
    *   - 避免 if-else 或 switch 分发大量服务调用
-   * 
+   *
    * 边界情况：
    *   - methodName 为空或未注册 → 返回 null
    *   - service 存在但非函数 → 返回 null（防止执行报错）
    *   - 参数可变长，适用于 format、parse、validate 等场景
-   * 
+   *
    */
   Class.prototype.invokeServiceLocator = function (methodName) {
     /**
@@ -4260,7 +4631,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
        * 调用指定的方法，并将剩余的参数传入
        */
       return serviceFunction.apply(this, Array.from(arguments).slice(1));
-    } 
+    }
 
     // 服务不存在或非函数，返回 null 表示调用失败
     return null;
@@ -4270,23 +4641,23 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   /**
    * @method findRenderer
    * 查找匹配的渲染器：遍历全局公共渲染器列表，返回第一个满足条件的实例。
-   * 
+   *
    * 查找逻辑：
    *   1. 按注册顺序遍历 publicRenderers
    *   2. 跳过非 Renderer 实例（容错）
    *   3. 调用 canRender 判断是否匹配
    *   4. 返回第一个匹配项，未找到返回 null
-   * 
+   *
    * 设计意图：
    *   - 支持插件式扩展渲染能力
    *   - 与实例级渲染器（this.renderers）形成两级查找机制
    *   - 避免硬编码 if-else 分发渲染逻辑
-   * 
+   *
    * 边界情况：
    *   - publicRenderers 为空 → 返回 null
    *   - 无匹配项 → 返回 null
    *   - 存在非法对象 → 自动跳过
-   * 
+   *
    * @this component 实例
    * @param {Object} formItem - 表单项配置对象
    * @param {String} type - 字段类型（通常为 formItem.type）
@@ -4315,14 +4686,14 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
    * @method observe
    * 监视某个对象，使其变为响应式。
    * 此方法会原地修改传入的对象 target。
-   * 
+   *
    * @this component实例
    * @param {*} o 配置项
    * @param {Object} o.target - 准备监视的数据对象或数组。
    * @param {string} [o.name] - 当前 target 对象的名称（可选，用于调试）。
    * @param {string} [o.filter] - 过滤器名称（可选）。
    * @return {*} 已经被封装监视的对象 `o.target`。
-   * 
+   *
    */
   Class.prototype.observe = function (o) {
     // 排除空值
@@ -4363,7 +4734,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
   /**
    * @method doObserve
    * 为对象的单个属性建立响应式连接。
-   * 
+   *
    * @this component实例
    * @param {*} o 配置项
    * @param {Object} o.target - 属性被添加的目标对象。
@@ -4372,7 +4743,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
    * @param {string} [o.filter] - 过滤器名称。
    * @return {*} 返回 `o.target` 上 `o.name` 属性的初始值（已为响应式）。
    * @description
-   * 
+   *
    * > 将一个对象转化处理成被当前模块监视的对象,其传入的参数包含下面几项
    *  - target: 属性被添加的目标
    *  - value: 待添加的属性值
@@ -4400,12 +4771,12 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
         // 注意：这里是比较 newValue 和 reactiveValue 的“内容”
         // 简化处理：如果引用相等，直接返回（对于原始值有效，对于对象/数组需谨慎，所以这个是忽略对象/数组的）
         // if (newValue === reactiveValue) return;
-        
+
         if(self.isStringOrStringArrayEqual(newValue, reactiveValue)) return;
-        
+
         // 执行 before 事件，允许拦截
         if(layui.event.call(self, component.CONST.MOD_NAME, `beforeExecute-${component.CONST.MOD_ID}-${self.config.id}[${o.filter}]`, { value: newValue ,oldValue: reactiveValue }) !== false ){
-          
+
           // 保存旧值
           var oldValue = reactiveValue;
 
@@ -4424,7 +4795,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
             value: reactiveValue,
             oldValue: oldValue
           };
-          
+
           // 触发事件
           layui.event.call(self, component.CONST.MOD_NAME, `${component.CONST.MOD_ID}-${self.config.id}[${o.filter}]`, eventData);
         }
@@ -4442,7 +4813,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
     /**
      * @function
      * 扫描并渲染表单
-     * 
+     *
      * @param {String|null} filter  表单外层容器(class值为layui-form的dom元素)的lay-filter属性值
      * @param {String|null} type    渲染类型: select;radio;checkbox...
      */
@@ -4474,7 +4845,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
      * @param {*} filter   表单外层容器(class值为layui-form的dom元素)的lay-filter属性值
      * @param {*} events   事件信息
      * @param {*} callback 回调函数
-     * @returns 
+     * @returns
      */
     on: function(filter, events, callback){
 
@@ -4497,27 +4868,27 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
     /**
      * 表单赋值（批量设置字段值）
-     * 
+     *
      * 根据 filter 查找对应表单实例，并将 object 中的数据赋值到表单字段。
      * 支持自动类型转换（通过 converter），适用于字符串、布尔、数组等类型映射。
-     * 
+     *
      * 使用场景：
      *   - 表单回显（如编辑页初始化）
      *   - 动态填充数据（如从接口获取后填充）
      *   - 支持跨实例赋值，无需直接持有实例引用
-     * 
+     *
      * 示例：
      *   formplus.val('form1', { name: '张三', age: 25, married: true });
-     * 
+     *
      * 设计说明：
      *   - 自动匹配 converter 进行类型转换（如 string → boolean）
      *   - 仅对 formData 中已定义的字段生效，防止非法赋值
      *   - 不触发 converter 时，原始值直接赋值
-     * 
+     *
      * @param {String} filter - 表单容器的 lay-filter 值（即实例 config.id）
      * @param {Object} object - 待赋值的数据对象，key 为字段名，value 为值
-     * @returns {Object|null} 
-     * 
+     * @returns {Object|null}
+     *
      * @throws {Error} 若目标实例存在但无 setData 方法，会抛出 TypeError
      */
     val: function(filter, object){
@@ -4547,13 +4918,13 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
          * 获取转换器
          */
         if (Object.prototype.hasOwnProperty.call(formData, k)) {
-        // 下面的用法不兼容旧版浏览器  
-        // if (Object.hasOwn(formData, k)) {
+          // 下面的用法不兼容旧版浏览器
+          // if (Object.hasOwn(formData, k)) {
           var converterInst = that.findConverter(layui.type(v), layui.type(formData[k]), k);
           var setValue = converterInst instanceof converter ? converterInst.convert.call(that, v) : v;
           that.setData(k, setValue);
         }
-        
+
         // if(layui.type(v) == 'array'){
         //   if(layui.type(that.getData(k) == 'array')){
         //     // 数组
@@ -4579,32 +4950,32 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
     /**
      * 表单取值（获取字段值）
-     * 
+     *
      * 根据 filter 查找表单实例，返回指定字段或整个表单的数据。
      * 支持通过 converter 自动转换输出类型（如 boolean → string）。
-     * 
+     *
      * 使用场景：
      *   - 获取表单提交数据
      *   - 获取单个字段实时值
      *   - 数据校验前预处理
-     * 
+     *
      * 示例：
      *   formplus.getValue('form1');           // 获取整个表单数据
      *   formplus.getValue('form1', 'name');   // 获取 name 字段值
-     * 
+     *
      * 设计说明：
      *   - 调用前触发 `syncValue` 事件，确保数据同步（如富文本编辑器）
      *   - 自动通过 converter 转换输出类型
      *   - 过滤内部字段（如 '-limit' 结尾的）
      *   - 与 layui.form.val 行为保持一致性
-     * 
+     *
      * @param {String} filter - 表单容器的 lay-filter 值（即实例 config.id）
      * @param {String} [key]  - 可选，指定字段名。若不传，返回整个表单数据
-     * @returns {any|Object|null} 
+     * @returns {any|Object|null}
      *          - 若 key 存在：返回该字段的值（经 converter 转换）
      *          - 若 key 不存在：返回整个表单数据对象（经 converter 转换）
      *          - 若实例未找到：返回 null
-     * 
+     *
      * @throws {Error} 若目标实例存在但无 getData 方法，会抛出 TypeError
      */
     getValue: function(filter, key){
@@ -4653,18 +5024,18 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
     /**
      * 添加按钮水波纹效果
-     * 
+     *
      * 为指定 DOM 元素添加 Material Design 风格的点击水波纹动画。
      * 封装了底层 `wave` 函数，提供统一调用入口。
-     * 
+     *
      * 使用场景：
      *   - 按钮点击反馈
      *   - 自定义组件增强交互体验
-     * 
-     * 
+     *
+     *
      * @param {String|HTMLElement|JQuery} destination - 目标元素选择器或 DOM 对象
      * @param {Object} [option] - 水波纹配置项
-     * 
+     *
      */
     wave: function(destination, option = {}){
       return wave(destination, option);
@@ -4672,26 +5043,26 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
     /**
      * 配置节假日数据
-     * 
+     *
      * 动态注册节假日或工作日信息，用于日历、排班、审批等场景的日期判断。
-     * 
+     *
      * 编码规则（内部字符串格式）：
      *   - 格式：`起始日期(8位) + 规则序号(1位) + 状态码(1位) + 结束日期(8位)`
      *   - 状态码：0 = 工作日，1 = 节假日
      *   - 示例：`202501011020250103` 表示 2025-01-01 到 2025-01-03 为节假日
-     * 
+     *
      * 使用场景：
      *   - 动态加载节假日配置（如从接口获取）
      *   - 临时调整排班规则
      *   - 插件化扩展日历功能
-     * 
-     * 
+     *
+     *
      * @param {String} destination - 起始日期，格式：YYYYMMDD（8位数字）
      * @param {String} holiday     - 结束日期，格式：YYYYMMDD（8位数字）
      * @param {Number|String} order - 规则序号（1位数字），用于区分不同规则批次
      * @param {Boolean} work        - 是否为工作日（true=工作日，false=节假日）
      * @returns {void|String} 若操作成功，返回更新后的密钥字符串；否则返回 undefined
-     * 
+     *
      * @throws {Error} 若 HolidayUtil 未加载，方法静默失败，无异常抛出
      */
     addHoliday: function(destination, holiday, order, work){
@@ -4708,10 +5079,10 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
     /**
      * 获取缓存的 tree 实例
-     * @param {*} filter 
-     * @param {*} treeId 
-     * @param {*} treeInst 
-     * @returns 
+     * @param {*} filter
+     * @param {*} treeId
+     * @param {*} treeInst
+     * @returns
      */
     cacheTree: function(filter, treeId, treeInst){
       if(!filter) return null;
@@ -4732,31 +5103,31 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
     /**
      * 注册一个转换器到指定组件实例
-     * 
+     *
      * 根据 filter（实例 ID）查找对应组件实例，并在其上注册转换器。
-     * 
+     *
      * 使用场景：
      *   - 动态为某个表单实例注册自定义数据转换逻辑（如：金额格式化、日期解析）
      *   - 插件化扩展，无需直接持有实例引用
-     * 
+     *
      * 示例：
-     *   registerConverter('form1', 
+     *   registerConverter('form1',
      *     (I, O) => I === 'string' && O === 'number',
      *     (val) => parseFloat(val) || 0
      *   );
-     * 
+     *
      * 设计说明：
      *   - 支持运行时动态注入 converter，提升灵活性
      *   - 与实例级 registerConverter 方法形成间接调用链
      *   - 查找失败时返回 null，不抛错，由调用方决定如何处理
-     * 
+     *
      * @param {String} filter - 目标组件实例的唯一标识符（config.id）
      * @param {Function} support - 条件函数，判断是否适用当前 I/O 类型
      *                            签名: (inputType, outputType, name) => Boolean
      * @param {Function} convert - 转换函数，执行实际转换逻辑
      *                            签名: (value, data, ctx) => any
      * @returns {Object|null} 返回目标实例（支持链式调用），若实例未找到则返回 null
-     * 
+     *
      * @throws {Error} 若目标实例存在但无 registerConverter 方法，会抛出 TypeError（由 apply 抛出）
      */
     registerConverter: function(filter, support, convert){
@@ -4783,17 +5154,17 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
     /**
      * 注册一个可被动态调用的服务
-     * 
+     *
      * 封装对 publicServiceLocator 的访问，提供统一入口。
-     * 
+     *
      * 优势：
      *   - 隐藏底层实现（publicServiceLocator）
      *   - 后续可添加校验、日志、拦截等逻辑
      *   - 保持 API 一致性
-     * 
+     *
      * 示例：
      *   registerHandler('formatDate', function(value) { ... });
-     * 
+     *
      * @param {String} methodName - 服务名称，将作为 invokeServiceLocator 的第一个参数
      * @param {Function} service - 服务函数，接收 invoke 时传入的参数
      * @returns {Object} publicServiceLocator 实例，支持链式注册（如 register(...).register(...)）
@@ -4804,20 +5175,20 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
 
     /**
      * 注册一个全局公共渲染器
-     * 
+     *
      * 用于扩展组件的默认渲染能力，无需实例化即可生效。
-     * 
+     *
      * 使用场景：
      *   - 自定义通用表单项（如：身份证、手机号、富文本）
      *   - 替换内置渲染逻辑
      *   - 实现插件化扩展
-     * 
+     *
      * 示例：
      *   registerRenderer(
      *     (item, type, formType) => item.type === 'custom-input',
      *     (dom, item, proxy) => dom.innerHTML = '自定义输入框'
      *   );
-     * 
+     *
      * @param {Function} condition - 条件函数，返回 true 表示当前渲染器可处理该字段
      *                              签名: (formItem, type, formType) => Boolean
      * @param {Function} render - 渲染函数，执行实际 DOM 渲染
@@ -4901,7 +5272,7 @@ layui.define(["jquery", "lay", "layer", "form", "component"], function (exports)
    */
   component.render = function(type, filter){
     /**
-     * 通过参数 filter 判断是否要渲染全部表单 
+     * 通过参数 filter 判断是否要渲染全部表单
      */
     if(!filter){
       // 渲染全部，是当前的全部

@@ -1,0 +1,68 @@
+{
+  "code": 200,
+  "message": "请求成功",
+  "data": [
+    {
+      "id": 1,
+      "cityName": "中国",
+      "spread": true,
+      "parentid": 0
+    },
+    {
+      "id": 113,
+      "cityName": "四川",
+      "spread": true,
+      "parentid": 1
+    },
+    {
+      "id": 114,
+      "cityName": "成都",
+      "spread": true,
+      "parentid": 113
+    },
+    {
+      "id": 115,
+      "cityName": "德阳",
+      "spread": true,
+      "parentid": 113
+    },
+    {
+      "id": 116,
+      "cityName": "绵阳",
+      "spread": true,
+      "parentid": 113
+    },
+    {
+      "id": 117,
+      "cityName": "重庆",
+      "spread": true,
+      "parentid": 1
+    },
+    {
+      "id": 118,
+      "cityName": "广东",
+      "spread": true,
+      "parentid": 1
+    },
+    {
+      "id": 119,
+      "cityName": "广州",
+      "spread": true,
+      "parentid": 118
+    },
+    {
+      "id": 120,
+      "cityName": "阳江",
+      "spread": true,
+      "parentid": 118
+    },
+    {
+      "id": 121,
+      "cityName": "茂名",
+      "spread": true,
+      "parentid": 118
+    }
+  ],
+  "state": 0,
+  "handle": null
+}
